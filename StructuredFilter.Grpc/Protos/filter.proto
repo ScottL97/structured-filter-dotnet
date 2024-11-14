@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+option csharp_namespace = "StructuredFilter.v1";
+
+package filter.v1;
+
+service FilterManager {
+  rpc GetFilters(GetFiltersRequest) returns (GetFiltersResponse);
+}
+
+message GetFiltersRequest {
+  string service_type = 1;
+}
+
+message GetFiltersResponse {
+  // example: 
+  // {
+  // "pid": {
+  //    "label": "玩家 ID",
+  //    "logics": [
+  //      {
+  //        "label": "属于",
+  //        "value": "$in"
+  //      },
+  //      {
+  //        "label": "不等于",
+  //        "value": "$ne"
+  //      },
+  //      {
+  //        "label": "等于",
+  //        "value": "$eq"
+  //      },
+  //      {
+  //        "label": "大于",
+  //        "value": "$gt"
+  //      },
+  //      {
+  //        "label": "在此范围（包含两端值）",
+  //        "value": "$range"
+  //      },
+  //      {
+  //        "label": "小于等于",
+  //        "value": "$le"
+  //      },
+  //      {
+  //        "label": "大于等于",
+  //        "value": "$ge"
+  //      },
+  //      {
+  //        "label": "小于",
+  //        "value": "$lt"
+  //      }
+  //    ],
+  //    "type": "NUMBER"
+  //  },
+  //  "userName": {
+  //    "label": "用户名",
+  //    "logics": [
+  //      {
+  //        "label": "等于",
+  //        "value": "$eq"
+  //      },
+  //      {
+  //        "label": "不等于",
+  //        "value": "$ne"
+  //      },
+  //      {
+  //        "label": "属于",
+  //        "value": "$in"
+  //      },
+  //      {
+  //        "label": "匹配正则表达式",
+  //        "value": "$regex"
+  //      },
+  //      {
+  //        "label": "在此范围（包含两端值）",
+  //        "value": "$range"
+  //      }
+  //    ],
+  //    "type": "STRING"
+  //  },
+  //  "playerGameVersion": {
+  //    "label": "玩家游戏版本",
+  //    "logics": [
+  //      {
+  //        "label": "属于",
+  //        "value": "$in"
+  //      },
+  //      {
+  //        "label": "不等于",
+  //        "value": "$ne"
+  //      },
+  //      {
+  //        "label": "等于",
+  //        "value": "$eq"
+  //      },
+  //      {
+  //        "label": "大于",
+  //        "value": "$gt"
+  //      },
+  //      {
+  //        "label": "在此范围（包含两端值）",
+  //        "value": "$range"
+  //      },
+  //      {
+  //        "label": "小于等于",
+  //        "value": "$le"
+  //      },
+  //      {
+  //        "label": "大于等于",
+  //        "value": "$ge"
+  //      },
+  //      {
+  //        "label": "小于",
+  //        "value": "$lt"
+  //      }
+  //    ],
+  //    "type": "VERSION"
+  //  }
+  //}
+  string filter_info = 1;
+}

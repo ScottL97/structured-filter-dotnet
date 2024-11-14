@@ -1,0 +1,5 @@
+.idea
+obj
+bin
+StructuredFilter.sln.DotSettings.user
+BenchmarkDotNet.Artifacts

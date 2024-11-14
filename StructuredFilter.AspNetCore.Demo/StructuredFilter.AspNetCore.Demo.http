@@ -1,0 +1,6 @@
+@StructuredFilter.AspNetCore.Demo_HostAddress = http://localhost:5285
+
+GET {{StructuredFilter.AspNetCore.Demo_HostAddress}}
+Accept: application/json
+
+###
