@@ -1,14 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.Common.FilterTypes;
+using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters.SceneFilters.Scenes;
 
 [FilterType("BOOL")]
-public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSceneFilter<T>.BoolValueGetter boolValueGetter) : Filter<T>
+public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSceneFilter<T>.BoolValueGetter boolValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
     protected delegate bool BoolValueGetter(T? matchTarget);
 
@@ -28,18 +28,18 @@ public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSce
         }
     }
 
-    public override async Task LazyMatchAsync(JsonElement filterElement, IFilter<T>.MatchTargetGetter targetGetter, Dictionary<string, object>? args)
+    protected override async Task LazyMatchInternalAsync(JsonElement filterElement, LazyObjectGetter<T> matchTargetGetter)
     {
         var kv = filterElement.EnumerateObject().ToArray()[0];
 
         try
         {
             var filter = filterFactory.BoolFilterFactory.Get(kv.Name);
-            await filter.LazyMatchAsync(kv.Value, async a =>
+            await filter.LazyMatchAsync(kv.Value, new LazyObjectGetter<bool>(async _ =>
             {
-                var (matchTarget, isExists) = await targetGetter(args);
-                return isExists ? (boolValueGetter(matchTarget), true) : (false, false);
-            }, args);
+                var matchTarget = await matchTargetGetter.GetAsync();
+                return (boolValueGetter(matchTarget), true);
+            }, matchTargetGetter.Args));
         }
         catch (FilterException e)
         {
@@ -47,7 +47,7 @@ public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSce
         }
     }
 
-    public override void Match(JsonElement filterElement, T matchTarget)
+    protected override void MatchInternal(JsonElement filterElement, T matchTarget)
     {
         var kv = filterElement.EnumerateObject().ToArray()[0];
 

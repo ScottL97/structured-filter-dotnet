@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using StructuredFilter.Filters;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.SceneFilters;
+using StructuredFilter.Utils;
 
 namespace StructuredFilter;
 
@@ -50,20 +51,16 @@ public class FilterService<T>(bool withCache = true)
         });
     }
 
-    public async Task<IEnumerable<T>> LazyFilterOutAsync(string rawFilter, IFilter<T>.MatchTargetGetter targetGetter, IEnumerable<Dictionary<string, object>> matchTargetsArgs)
+    public async Task<IEnumerable<T>> LazyFilterOutAsync(string rawFilter, IEnumerable<LazyObjectGetter<T>> matchTargetsGetters)
     {
         var filteredResults = new List<T>();
-        foreach (var args in matchTargetsArgs)
+        foreach (var matchTargetGetter in matchTargetsGetters)
         {
-            var filterResult = await LazyMatchAsync(rawFilter, targetGetter, args);
+            var filterResult = await LazyMatchAsync(rawFilter, matchTargetGetter);
             if (filterResult.StatusCode == FilterStatusCode.Ok)
             {
-                // TODO: 这里重复获取 matchTarget，可能产生性能问题及一致性问题
-                var (matchTarget, isExists) = await targetGetter(args);
-                if (isExists)
-                {
-                    filteredResults.Add(matchTarget);
-                }
+                var matchTarget = await matchTargetGetter.GetAsync();
+                filteredResults.Add(matchTarget);
             }
         }
 
@@ -87,11 +84,11 @@ public class FilterService<T>(bool withCache = true)
     }
 
     // 不匹配时不会抛出异常而是返回匹配结果
-    public async Task<FilterException> LazyMatchAsync(string rawFilter, IFilter<T>.MatchTargetGetter targetGetter, Dictionary<string, object>? args)
+    public async Task<FilterException> LazyMatchAsync(string rawFilter, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {
-            await LazyMustMatchAsync(rawFilter, targetGetter, args);
+            await LazyMustMatchAsync(rawFilter, matchTargetGetter);
         }
         catch (FilterException e)
         {
@@ -133,7 +130,7 @@ public class FilterService<T>(bool withCache = true)
     }
 
     // 不匹配时抛出异常
-    public async Task LazyMustMatchAsync(string rawFilter, IFilter<T>.MatchTargetGetter targetGetter, Dictionary<string, object>? args)
+    public async Task LazyMustMatchAsync(string rawFilter, LazyObjectGetter<T> matchTargetGetter)
     {
         if (rawFilter.Length == 0)
         {
@@ -148,10 +145,10 @@ public class FilterService<T>(bool withCache = true)
                 var filter = FilterFactory.Get(property.Name);
                 if (filter.GetType() == typeof(JsonPathFilter))
                 {
-                    await filter.LazyMatchAsync(filterDocument.Document.RootElement, targetGetter, args);
+                    await filter.LazyMatchAsync(filterDocument.Document.RootElement, matchTargetGetter);
                     continue;
                 }
-                await filter.LazyMatchAsync(property.Value, targetGetter, args);
+                await filter.LazyMatchAsync(property.Value, matchTargetGetter);
             }
         }
         catch (FilterException)

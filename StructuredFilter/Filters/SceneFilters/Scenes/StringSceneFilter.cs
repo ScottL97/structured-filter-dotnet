@@ -1,16 +1,16 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.Common.FilterTypes;
+using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters.SceneFilters.Scenes;
 
 [FilterType("STRING")]
-public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, StringSceneFilter<T>.NumberValueGetter stringValueGetter) : Filter<T>
+public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, StringSceneFilter<T>.StringValueGetter stringValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
-    protected delegate string NumberValueGetter(T? matchTarget);
+    protected delegate string StringValueGetter(T? matchTarget);
 
     public override void Valid(JsonElement filterElement)
     {
@@ -28,18 +28,18 @@ public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, Strin
         }
     }
 
-    public override async Task LazyMatchAsync(JsonElement filterElement, IFilter<T>.MatchTargetGetter targetGetter, Dictionary<string, object>? args)
+    protected override async Task LazyMatchInternalAsync(JsonElement filterElement, LazyObjectGetter<T> matchTargetGetter)
     {
         var kv = filterElement.EnumerateObject().ToArray()[0];
 
         try
         {
             var filter = filterFactory.StringFilterFactory.Get(kv.Name);
-            await filter.LazyMatchAsync(kv.Value, async a =>
+            await filter.LazyMatchAsync(kv.Value, new LazyObjectGetter<string>(async _ =>
             {
-                var (matchTarget, isExists) = await targetGetter(args);
-                return isExists ? (stringValueGetter(matchTarget), true) : (string.Empty, false);
-            }, args);
+                var matchTarget = await matchTargetGetter.GetAsync();
+                return (stringValueGetter(matchTarget), true);
+            }, matchTargetGetter.Args));
         }
         catch (FilterException e)
         {
@@ -47,7 +47,7 @@ public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, Strin
         }
     }
 
-    public override void Match(JsonElement filterElement, T matchTarget)
+    protected override void MatchInternal(JsonElement filterElement, T matchTarget)
     {
         var kv = filterElement.EnumerateObject().ToArray()[0];
 

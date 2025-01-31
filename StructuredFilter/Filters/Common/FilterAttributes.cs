@@ -35,3 +35,6 @@ public class FilterType : Attribute
         Type = type;
     }
 }
+
+[AttributeUsage(AttributeTargets.Class)]
+public class Cacheable : Attribute;

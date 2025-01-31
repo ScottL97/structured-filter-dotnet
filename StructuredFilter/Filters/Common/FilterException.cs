@@ -67,6 +67,11 @@ public static class FilterExceptionExtensions
     {
         throw new FilterException(FilterStatusCode.NotMatched, $"matchTarget {matchTarget} of type {typeof(T)} not match {{{filter.GetKey()}: {filterValue}}}", filter.GetKey());
     }
+    
+    public static void ThrowCacheNotMatchException<T>(this IFilter<T> filter, T matchTarget, string filterValue)
+    {
+        throw new FilterException(FilterStatusCode.NotMatched, $"matchTarget {matchTarget} of type {typeof(T)} not match {{{filter.GetKey()}: {filterValue}}} according to cache", filter.GetKey());
+    }
 
     public static void ThrowWrongFilterValueTypeException<T>(this IFilter<T> filter, JsonElement element, JsonValueKind expectedType)
     {

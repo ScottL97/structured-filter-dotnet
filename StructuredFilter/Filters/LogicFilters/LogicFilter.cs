@@ -63,7 +63,7 @@ public class AndFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
         }
     }
 
-    public override async Task LazyMatchAsync(JsonElement element, IFilter<T>.MatchTargetGetter targetGetter, Dictionary<string, object>? args)
+    public override async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {
@@ -75,12 +75,11 @@ public class AndFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
                     
                         if (property.IsJsonPathFilter())
                         {
-                            await sceneFilterFactory.Get(Consts.JsonPathFilterKey).LazyMatchAsync(filterObject, targetGetter, args);
+                            await sceneFilterFactory.Get(Consts.JsonPathFilterKey).LazyMatchAsync(filterObject, matchTargetGetter);
                             continue;
                         }
                         var filter = sceneFilterFactory.Get(property.Name);
-                        await filter.LazyMatchAsync(property.Value, targetGetter, args);
-                    
+                        await filter.LazyMatchAsync(property.Value, matchTargetGetter);
                 }
             }
         }
@@ -138,7 +137,7 @@ public class OrFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
         }
     }
 
-    public override async Task LazyMatchAsync(JsonElement element, IFilter<T>.MatchTargetGetter targetGetter, Dictionary<string, object>? args)
+    public override async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
     {
         var failedKeyPath = new List<Tree<string>>();
         foreach (var filterObject in element.EnumerateArray())
@@ -149,11 +148,11 @@ public class OrFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
                 {
                     if (property.IsJsonPathFilter())
                     {
-                        await sceneFilterFactory.Get(Consts.JsonPathFilterKey).LazyMatchAsync(filterObject, targetGetter, args);
+                        await sceneFilterFactory.Get(Consts.JsonPathFilterKey).LazyMatchAsync(filterObject, matchTargetGetter);
                         continue;
                     }
                     var filter = sceneFilterFactory.Get(property.Name);
-                    await filter.LazyMatchAsync(property.Value, targetGetter, args);
+                    await filter.LazyMatchAsync(property.Value, matchTargetGetter);
                 }
                 catch (FilterException e)
                 {

@@ -3,8 +3,8 @@ using Demo;
 using Demo.Scenes;
 using Newtonsoft.Json.Linq;
 using StructuredFilter;
-using StructuredFilter.Filters;
 using StructuredFilter.Filters.Common;
+using StructuredFilter.Utils;
 
 FilterService<Player> filterService;
 try
@@ -45,7 +45,7 @@ var player = new Player
     },
     GameVersion = new Version("1.0.1")
 };
-var playerGetter = (IFilter<Player>.MatchTargetGetter)(args => Task.FromResult<(Player, bool)>((player, true)));
+var playerGetter = new LazyObjectGetter<Player>(_ => Task.FromResult<(Player, bool)>((player, true)), null);
 var playerJson = JsonSerializer.Serialize(player);
 
 var filterJson = "{\"userName\": {\"$regex\": \"^S\"}}";
@@ -66,7 +66,7 @@ var printMatchSuccessfully = new Action<string, string>((p, f) =>
 
 try
 {
-    await filterService.LazyMustMatchAsync(filterJson, playerGetter, null);
+    await filterService.LazyMustMatchAsync(filterJson, playerGetter);
     printMatchSuccessfully(playerJson, filterJson);
 }
 catch (FilterException e)
@@ -84,7 +84,7 @@ catch (FilterException e)
     printFilterException(filterJson, e);
 }
 
-var filterException = await filterService.LazyMatchAsync(filterJson, playerGetter, null);
+var filterException = await filterService.LazyMatchAsync(filterJson, playerGetter);
 if (filterException.StatusCode == FilterStatusCode.Ok)
 {
     printMatchSuccessfully(playerJson, filterJson);
@@ -113,7 +113,7 @@ foreach (var filteredPlayer in filterService.FilterOut(filterJson, players))
 try
 {
     filterJson = "{\"userName\": {\"$regex\": \"^A\"}}";
-    await filterService.LazyMustMatchAsync(filterJson, playerGetter, null);
+    await filterService.LazyMustMatchAsync(filterJson, playerGetter);
     printMatchSuccessfully(playerJson, filterJson);
 }
 catch (FilterException e)

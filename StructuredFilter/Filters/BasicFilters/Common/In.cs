@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.Common.FilterTypes;
+using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters.BasicFilters.Common;
 
@@ -16,20 +16,22 @@ internal class InFilter<T>: Filter<T>
         element.AssertIsValidArray(this);
     }
 
-    public override async Task LazyMatchAsync(JsonElement element, IFilter<T>.MatchTargetGetter targetGetter, Dictionary<string, object>? args)
+    public override async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
     {
-        var (matchTarget, isExists) = await targetGetter(args);
-        if (!isExists)
+        try
         {
-            this.ThrowMatchTargetGetFailedException(args);
-        }
+            var matchTarget = await matchTargetGetter.GetAsync();
+            if (element.EnumerateArray().Any(e => e.MatchEq(this, matchTarget)))
+            {
+                return;
+            }
 
-        if (element.EnumerateArray().Any(e => e.MatchEq(this, matchTarget)))
+            this.ThrowNotMatchException(matchTarget, element.ToString());
+        }
+        catch (LazyObjectGetException)
         {
-            return;
+            this.ThrowMatchTargetGetFailedException(matchTargetGetter.Args);
         }
-
-        this.ThrowNotMatchException(matchTarget, element.ToString());
     }
 
     public override void Match(JsonElement element, T matchTarget)

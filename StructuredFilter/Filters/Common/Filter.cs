@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
+using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters.Common;
 
@@ -33,10 +33,8 @@ public abstract class Filter<T> : IFilter<T>
         return typeAttribute.Type;
     }
 
-    public delegate T MatchTargetGetter(Dictionary<string, object>? args);
-
     public abstract void Valid(JsonElement element);
 
-    public abstract Task LazyMatchAsync(JsonElement element, IFilter<T>.MatchTargetGetter targetGetter, Dictionary<string, object>? args);
+    public abstract Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter);
     public abstract void Match(JsonElement element, T matchTarget);
 }

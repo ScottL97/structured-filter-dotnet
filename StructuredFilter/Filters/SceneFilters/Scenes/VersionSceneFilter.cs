@@ -1,18 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.Common.FilterTypes;
+using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters.SceneFilters.Scenes;
 
 [FilterType("VERSION")]
-public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, VersionSceneFilter<T>.VersionValueGetter versionValueGetter) : Filter<T>
+public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, VersionSceneFilter<T>.VersionValueGetter versionValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
     protected delegate Version VersionValueGetter(T? matchTarget);
-    private static readonly Version DefaultVersion = new (0, 0);
 
     public override void Valid(JsonElement filterElement)
     {
@@ -30,18 +29,18 @@ public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, Vers
         }
     }
 
-    public override async Task LazyMatchAsync(JsonElement filterElement, IFilter<T>.MatchTargetGetter targetGetter, Dictionary<string, object>? args)
+    protected override async Task LazyMatchInternalAsync(JsonElement filterElement, LazyObjectGetter<T> matchTargetGetter)
     {
         var kv = filterElement.EnumerateObject().ToArray()[0];
 
         try
         {
             var filter = filterFactory.VersionFilterFactory.Get(kv.Name);
-            await filter.LazyMatchAsync(kv.Value, async a =>
+            await filter.LazyMatchAsync(kv.Value, new LazyObjectGetter<Version>(async _ =>
             {
-                var (matchTarget, isExists) = await targetGetter(args);
-                return isExists ? (versionValueGetter(matchTarget), true) : (DefaultVersion, false);
-            }, args);
+                var matchTarget = await matchTargetGetter.GetAsync();
+                return (versionValueGetter(matchTarget), true);
+            }, matchTargetGetter.Args));
         }
         catch (FilterException e)
         {
@@ -49,7 +48,7 @@ public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, Vers
         }
     }
 
-    public override void Match(JsonElement filterElement, T matchTarget)
+    protected override void MatchInternal(JsonElement filterElement, T matchTarget)
     {
         var kv = filterElement.EnumerateObject().ToArray()[0];
 

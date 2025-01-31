@@ -1,10 +1,10 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
-using StructuredFilter.Filters;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Test.Models;
 using StructuredFilter.Test.Scenes;
+using StructuredFilter.Utils;
 
 namespace StructuredFilter.Test;
 
@@ -30,9 +30,9 @@ public partial class StructuredFilterTests
         GameVersion = new Version("1.0.1")
     };
     private static readonly string Player1Json = JsonSerializer.Serialize(Player1);
-    private static readonly IFilter<Player>.MatchTargetGetter Player1Getter = _ => Task.FromResult((Player1, true));
+    private static readonly LazyObjectGetter<Player> Player1Getter = new (_ => Task.FromResult((Player1, true)), null);
     private static readonly JObject Player1JObject = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(Player1Json)!;
-    private static readonly IFilter<JObject>.MatchTargetGetter Player1JObjectGetter = _ => Task.FromResult((Player1JObject, true));
+    private static readonly LazyObjectGetter<JObject> Player1JObjectGetter = new (_ => Task.FromResult((Player1JObject, true)), null);
 
     private static readonly Player Player2 = new()
     {
@@ -54,15 +54,21 @@ public partial class StructuredFilterTests
         GameVersion = new Version("1.0.2")
     };
     private static readonly string Player2Json = JsonSerializer.Serialize(Player2);
-    private static readonly IFilter<Player>.MatchTargetGetter Player2Getter = _ => Task.FromResult((Player2, true));
+    private static readonly LazyObjectGetter<Player> Player2Getter = new (_ => Task.FromResult((Player2, true)), null);
     private static readonly JObject Player2JObject = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(Player2Json)!;
-    private static readonly IFilter<JObject>.MatchTargetGetter Player2JObjectGetter = _ => Task.FromResult((Player2JObject, true));
+    private static readonly LazyObjectGetter<JObject> Player2JObjectGetter = new (_ => Task.FromResult((Player2JObject, true)), null);
 
     private static readonly List<Player> Players = [Player1, Player2];
-    private static readonly List<IFilter<Player>.MatchTargetGetter> PlayersGetter = [Player1Getter, Player2Getter];
+    private static readonly List<LazyObjectGetter<Player>> PlayersGetter = [Player1Getter, Player2Getter];
 
     private readonly FilterService<Player> _filterService = new FilterService<Player>().WithSceneFilters([
         f => new PidFilter(f),
+        f => new UserNameFilter(f),
+        f => new PlayerGameVersionFilter(f)
+    ]);
+
+    private readonly FilterService<Player> _cacheableFilterService = new FilterService<Player>().WithSceneFilters([
+        f => new Scenes.CacheableScenes.PidFilter(f),
         f => new UserNameFilter(f),
         f => new PlayerGameVersionFilter(f)
     ]);
@@ -116,13 +122,13 @@ public partial class StructuredFilterTests
 
         foreach (var filterJson in filterJsons)
         {
-            await _filterService.LazyMustMatchAsync(filterJson, Player1Getter, null);
+            await _filterService.LazyMustMatchAsync(filterJson, Player1Getter);
             Console.WriteLine($"player {Player1Json} lazy must match filter {filterJson} successfully");
 
             _filterService.MustMatch(filterJson, Player1);
             Console.WriteLine($"player {Player1Json} must match filter {filterJson} successfully");
 
-            var filterException = await _filterService.LazyMatchAsync(filterJson, Player1Getter, null);
+            var filterException = await _filterService.LazyMatchAsync(filterJson, Player1Getter);
             Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
             Console.WriteLine($"player {Player1Json} lazy match filter {filterJson} successfully");
 
@@ -241,7 +247,7 @@ public partial class StructuredFilterTests
         foreach (var expect in expects)
         {
             var e = Assert.ThrowsAsync<FilterException>(() =>
-                _filterService.LazyMustMatchAsync(expect.FilterJson, Player1Getter, null));
+                _filterService.LazyMustMatchAsync(expect.FilterJson, Player1Getter));
             PrintFilterException(e);
             Assert.Multiple(() =>
             {
@@ -262,7 +268,7 @@ public partial class StructuredFilterTests
                 Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
             });
             
-            e = await _filterService.LazyMatchAsync(expect.FilterJson, Player1Getter, null);
+            e = await _filterService.LazyMatchAsync(expect.FilterJson, Player1Getter);
             Assert.Multiple(() =>
             {
                 Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
@@ -284,8 +290,13 @@ public partial class StructuredFilterTests
     public void ShouldFailedWhenMatchTargetNotFound()
     {
         var filterJson = "{\"pid\": {\"$in\": [1000, 1001]}}";
-        
-        var playerGetter = new IFilter<Player>.MatchTargetGetter(a =>
+
+        Dictionary<string, object> args = new()
+        {
+            { "pid", 10000 }
+        };
+
+        var playerGetter = new LazyObjectGetter<Player>(a =>
         {
             if (a == null)
             {
@@ -299,15 +310,10 @@ public partial class StructuredFilterTests
             }
 
             return Task.FromResult((player, true));
-        });
-
-        Dictionary<string, object> args = new()
-        {
-            { "pid", 10000 }
-        };
+        }, args);
 
         var e = Assert.ThrowsAsync<FilterException>(() =>
-            _filterService.LazyMustMatchAsync(filterJson, playerGetter, args));
+            _filterService.LazyMustMatchAsync(filterJson, playerGetter));
         Assert.Multiple(() =>
         {
             Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.MatchError));
@@ -330,6 +336,44 @@ public partial class StructuredFilterTests
     }
 
     [Test]
+    public void ShouldCacheFilterResultAfterFirstParse()
+    {
+        var filterJson = "{\"pid\": {\"$in\": [1000, 1001]}}";
+        _cacheableFilterService.MustMatch(filterJson, Player1);
+        Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
+
+        // filter result will be cached after first parse
+        filterJson = "{\"pid\": {\"$in\": [1000, 1001]}}";
+        _cacheableFilterService.MustMatch(filterJson, Player1);
+        Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
+
+        filterJson = "{\"pid\": {\"$in\": [1001, 1002]}}";
+        var e = Assert.Throws<FilterException>(() =>
+        {
+            _cacheableFilterService.MustMatch(filterJson, Player1);
+        });
+        Assert.Multiple(() =>
+        {
+            Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.NotMatched));
+            Assert.That(e.Message, Does.StartWith("matchTarget 1000 of type System.Double not match {$in: [1001,1002]}"));
+            Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(new List<string> { "pid", "$in" }));
+        });
+
+        // filter result will be cached after first parse
+        filterJson = "{\"pid\": {\"$in\": [1001, 1002]}}";
+        e = Assert.Throws<FilterException>(() =>
+        {
+            _cacheableFilterService.MustMatch(filterJson, Player1);
+        });
+        Assert.Multiple(() =>
+        {
+            Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.NotMatched));
+            Assert.That(e.Message, Does.StartWith("matchTarget StructuredFilter.Test.Models.Player of type StructuredFilter.Test.Models.Player not match {pid: {\"$in\":[1001,1002]}} according to cache"));
+            Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(new List<string> { "pid" }));
+        });
+    }
+
+    [Test]
     public void ShouldFilterOutSuccessfully()
     {
         var filterJson = "{\"pid\": {\"$in\": [1000, 1001]}}";
@@ -342,7 +386,7 @@ public partial class StructuredFilterTests
     public async Task ShouldLazyFilterOutSuccessfully()
     {
         var filterJson = "{\"pid\": {\"$in\": [1000, 1001]}}";
-        var playerGetter = new IFilter<Player>.MatchTargetGetter(a =>
+        LazyObjectGetter<Player, string, object>.ObjectGetter getter = a =>
         {
             if (a == null)
             {
@@ -356,7 +400,7 @@ public partial class StructuredFilterTests
             }
 
             return Task.FromResult((player, true));
-        });
+        };
 
         var args = new List<Dictionary<string, object>>
         {
@@ -370,7 +414,9 @@ public partial class StructuredFilterTests
             }
         };
 
-        var filteredPlayers = (await _filterService.LazyFilterOutAsync(filterJson, playerGetter, args)).ToList();
+        var playerGetters = args.Select(a => new LazyObjectGetter<Player>(getter, a)).ToList();
+
+        var filteredPlayers = (await _filterService.LazyFilterOutAsync(filterJson, playerGetters)).ToList();
         Assert.That(filteredPlayers, Has.Count.EqualTo(1));
         Assert.That(filteredPlayers, Has.All.Matches<Player>(p => p.Pid == 1000));
         
@@ -386,7 +432,9 @@ public partial class StructuredFilterTests
                 { "pid", 10010 }
             }
         ];
-        filteredPlayers = (await _filterService.LazyFilterOutAsync(filterJson, playerGetter, args)).ToList();
+        playerGetters = args.Select(a => new LazyObjectGetter<Player>(getter, a)).ToList();
+
+        filteredPlayers = (await _filterService.LazyFilterOutAsync(filterJson, playerGetters)).ToList();
         Assert.That(filteredPlayers, Has.Count.EqualTo(0));
     }
 
@@ -402,13 +450,13 @@ public partial class StructuredFilterTests
 
         foreach (var filterJson in filterJsons)
         {
-            await _jsonPathFilterService.LazyMustMatchAsync(filterJson, Player1JObjectGetter, null);
+            await _jsonPathFilterService.LazyMustMatchAsync(filterJson, Player1JObjectGetter);
             Console.WriteLine($"player {Player1Json} lazy must match filter {filterJson} successfully");
 
             _jsonPathFilterService.MustMatch(filterJson, Player1JObject);
             Console.WriteLine($"player {Player1Json} must match filter {filterJson} successfully");
 
-            var filterException = await _jsonPathFilterService.LazyMatchAsync(filterJson, Player1JObjectGetter, null);
+            var filterException = await _jsonPathFilterService.LazyMatchAsync(filterJson, Player1JObjectGetter);
             Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
             Console.WriteLine($"player {Player1Json} lazy match filter {filterJson} successfully");
 
@@ -470,7 +518,7 @@ public partial class StructuredFilterTests
         foreach (var expect in expects)
         {
             var e = Assert.ThrowsAsync<FilterException>(() =>
-                _jsonPathFilterService.LazyMustMatchAsync(expect.FilterJson, Player1JObjectGetter, null));
+                _jsonPathFilterService.LazyMustMatchAsync(expect.FilterJson, Player1JObjectGetter));
             PrintFilterException(e);
             Assert.Multiple(() =>
             {
@@ -491,7 +539,7 @@ public partial class StructuredFilterTests
                 Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
             });
             
-            e = await _jsonPathFilterService.LazyMatchAsync(expect.FilterJson, Player1JObjectGetter, null);
+            e = await _jsonPathFilterService.LazyMatchAsync(expect.FilterJson, Player1JObjectGetter);
             Assert.Multiple(() =>
             {
                 Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));

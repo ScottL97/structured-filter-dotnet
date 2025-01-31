@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using StructuredFilter.Filters.BasicFilters.Common;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.Common.FilterTypes;
+using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters.BasicFilters;
 
@@ -55,20 +56,22 @@ internal class StringRegexFilter : Filter<string>, IStringFilter
         element.AssertIsValidRegex(this);
     }
 
-    public override async Task LazyMatchAsync(JsonElement element, IFilter<string>.MatchTargetGetter targetGetter, Dictionary<string, object>? args)
+    public override async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<string> matchTargetGetter)
     {
-        var (matchTarget, isExists) = await targetGetter(args);
-        if (!isExists)
+        try
         {
-            this.ThrowMatchTargetGetFailedException(args);
-        }
+            var matchTarget = await matchTargetGetter.GetAsync();
+            if (Regex.IsMatch(matchTarget, element.GetString()!, RegexOptions.None))
+            {
+                return;
+            }
 
-        if (Regex.IsMatch(matchTarget, element.GetString()!, RegexOptions.None))
+            this.ThrowNotMatchException(matchTarget, element.ToString());
+        }
+        catch (LazyObjectGetException)
         {
-            return;
+            this.ThrowMatchTargetGetFailedException(matchTargetGetter.Args);
         }
-
-        this.ThrowNotMatchException(matchTarget, element.ToString());
     }
 
     public override void Match(JsonElement element, string matchTarget)

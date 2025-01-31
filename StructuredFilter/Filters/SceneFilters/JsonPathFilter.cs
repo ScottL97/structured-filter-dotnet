@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using StructuredFilter.Filters.Common;
+using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters;
 
@@ -28,14 +28,17 @@ public class JsonPathFilter(FilterFactory<JObject> filterFactory) : Filter<JObje
         }
     }
 
-    public override async Task LazyMatchAsync(JsonElement filterElement, IFilter<JObject>.MatchTargetGetter targetGetter, Dictionary<string, object>? args)
+    public override async Task LazyMatchAsync(JsonElement filterElement, LazyObjectGetter<JObject> matchTargetGetter)
     {
-        var (matchTarget, isExists) = await targetGetter(args);
-        if (!isExists)
+        try
         {
-            this.ThrowMatchTargetGetFailedException(args);
+            var matchTarget = await matchTargetGetter.GetAsync();
+            Match(filterElement, matchTarget);
         }
-        Match(filterElement, matchTarget);
+        catch (LazyObjectGetException)
+        {
+            this.ThrowMatchTargetGetFailedException(matchTargetGetter.Args);
+        }
     }
 
     public override void Match(JsonElement filterElement, JObject matchTarget)
