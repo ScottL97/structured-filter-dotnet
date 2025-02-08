@@ -33,13 +33,14 @@ internal class RangeFilter<T>: Filter<T>
         }
     }
 
-    public override void Match(JsonElement element, T matchTarget)
+    public override Task MatchAsync(JsonElement element, T matchTarget)
     {
         if (element[1].CompareTo(this, matchTarget) >= 0 && element[0].CompareTo(this, matchTarget) <= 0)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         this.ThrowNotMatchException(matchTarget, element.ToString());
+        return Task.CompletedTask;
     }
 }

@@ -42,13 +42,19 @@ public class FilterService<T>(bool withCache = true)
     }
 
     // 返回 matchTargets 中满足 filter 的子集
-    public IEnumerable<T> FilterOut(string rawFilter, IEnumerable<T> matchTargets)
+    public async Task<IEnumerable<T>> FilterOutAsync(string rawFilter, IEnumerable<T> matchTargets)
     {
-        return matchTargets.Where(matchTarget =>
+        var tasks = matchTargets.Select(async matchTarget =>
         {
-            var filterResult = Match(rawFilter, matchTarget);
-            return filterResult.StatusCode == FilterStatusCode.Ok;
+            var filterResult = await MatchAsync(rawFilter, matchTarget);
+            return new
+            {
+                MatchTarget = matchTarget,
+                IsMatched = filterResult.StatusCode == FilterStatusCode.Ok
+            };
         });
+        var results = await Task.WhenAll(tasks);
+        return results.Where(r => r.IsMatched).Select(r => r.MatchTarget);
     }
 
     public async Task<IEnumerable<T>> LazyFilterOutAsync(string rawFilter, IEnumerable<LazyObjectGetter<T>> matchTargetsGetters)
@@ -69,11 +75,11 @@ public class FilterService<T>(bool withCache = true)
 
     private static readonly FilterException OkResult = new (FilterStatusCode.Ok, "ok", "");
 
-    public FilterException Match(string rawFilter, T matchTarget)
+    public async Task<FilterException> MatchAsync(string rawFilter, T matchTarget)
     {
         try
         {
-            MustMatch(rawFilter, matchTarget);
+            await MustMatchAsync(rawFilter, matchTarget);
         }
         catch (FilterException e)
         {
@@ -98,7 +104,7 @@ public class FilterService<T>(bool withCache = true)
         return OkResult;
     }
 
-    public void MustMatch(string rawFilter, T matchTarget)
+    public async Task MustMatchAsync(string rawFilter, T matchTarget)
     {
         if (rawFilter.Length == 0)
         {
@@ -113,10 +119,10 @@ public class FilterService<T>(bool withCache = true)
                 var filter = FilterFactory.Get(property.Name);
                 if (filter.GetType() == typeof(JsonPathFilter))
                 {
-                    filter.Match(filterDocument.Document.RootElement, matchTarget);
+                    await filter.MatchAsync(filterDocument.Document.RootElement, matchTarget);
                     continue;
                 }
-                filter.Match(property.Value, matchTarget);
+                await filter.MatchAsync(property.Value, matchTarget);
             }
         }
         catch (FilterException)

@@ -53,20 +53,20 @@ public class FilterServiceBenchmark
     };
 
     [Benchmark]
-    public void FilterServiceWithCache()
+    public async Task FilterServiceWithCache()
     {
         foreach (var rawFilter in _rawFilters)
         {
-            _filterServiceWithCache.Match(rawFilter, _player);
+            await _filterServiceWithCache.MatchAsync(rawFilter, _player);
         }
     }
 
     [Benchmark]
-    public void FilterServiceWithoutCache()
+    public async Task FilterServiceWithoutCache()
     {
         foreach (var rawFilter in _rawFilters)
         {
-            _filterServiceWithoutCache.Match(rawFilter, _player);
+            await _filterServiceWithoutCache.MatchAsync(rawFilter, _player);
         }
     }
 }

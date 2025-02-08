@@ -33,7 +33,7 @@ public class JsonPathFilter(FilterFactory<JObject> filterFactory) : Filter<JObje
         try
         {
             var matchTarget = await matchTargetGetter.GetAsync();
-            Match(filterElement, matchTarget);
+            await MatchAsync(filterElement, matchTarget);
         }
         catch (LazyObjectGetException)
         {
@@ -41,7 +41,7 @@ public class JsonPathFilter(FilterFactory<JObject> filterFactory) : Filter<JObje
         }
     }
 
-    public override void Match(JsonElement filterElement, JObject matchTarget)
+    public override async Task MatchAsync(JsonElement filterElement, JObject matchTarget)
     {
         var kv = filterElement.EnumerateObject().ToArray()[0];
 
@@ -55,14 +55,14 @@ public class JsonPathFilter(FilterFactory<JObject> filterFactory) : Filter<JObje
         switch (kv.Value.ValueKind)
         {
             case JsonValueKind.String:
-                MatchString(tokens, kv);
+                await MatchStringAsync(tokens, kv);
                 break;
             case JsonValueKind.Number:
-                MatchNumber(tokens, kv);
+                await MatchNumberAsync(tokens, kv);
                 break;
             case JsonValueKind.True:
             case JsonValueKind.False:
-                MatchBool(tokens, kv);
+                await MatchBoolAsync(tokens, kv);
                 break;
             case JsonValueKind.Null:
                 MatchNull(tokens, kv);
@@ -75,7 +75,7 @@ public class JsonPathFilter(FilterFactory<JObject> filterFactory) : Filter<JObje
         }
     }
 
-    private void MatchString(JToken[] tokens, JsonProperty property)
+    private async Task MatchStringAsync(JToken[] tokens, JsonProperty property)
     {
         if (tokens.Length != 1)
         {
@@ -92,7 +92,7 @@ public class JsonPathFilter(FilterFactory<JObject> filterFactory) : Filter<JObje
         try
         {
             var filter = filterFactory.StringFilterFactory.Get("$eq");
-            filter.Match(property.Value, tokens[0].ToString());
+            await filter.MatchAsync(property.Value, tokens[0].ToString());
         }
         catch (FilterException e)
         {
@@ -100,7 +100,7 @@ public class JsonPathFilter(FilterFactory<JObject> filterFactory) : Filter<JObje
         }
     }
 
-    private void MatchNumber(JToken[] tokens, JsonProperty property)
+    private async Task MatchNumberAsync(JToken[] tokens, JsonProperty property)
     {
         if (tokens.Length != 1)
         {
@@ -117,7 +117,7 @@ public class JsonPathFilter(FilterFactory<JObject> filterFactory) : Filter<JObje
         try
         {
             var filter = filterFactory.NumberFilterFactory.Get("$eq");
-            filter.Match(property.Value, value);
+            await filter.MatchAsync(property.Value, value);
         }
         catch (FilterException e)
         {
@@ -125,7 +125,7 @@ public class JsonPathFilter(FilterFactory<JObject> filterFactory) : Filter<JObje
         }
     }
 
-    private void MatchBool(JToken[] tokens, JsonProperty property)
+    private async Task MatchBoolAsync(JToken[] tokens, JsonProperty property)
     {
         if (tokens.Length != 1)
         {
@@ -142,7 +142,7 @@ public class JsonPathFilter(FilterFactory<JObject> filterFactory) : Filter<JObje
         try
         {
             var filter = filterFactory.BoolFilterFactory.Get("$eq");
-            filter.Match(property.Value, value);
+            await filter.MatchAsync(property.Value, value);
         }
         catch (FilterException e)
         {

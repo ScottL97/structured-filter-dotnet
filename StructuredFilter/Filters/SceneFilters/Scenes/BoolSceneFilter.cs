@@ -47,14 +47,14 @@ public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSce
         }
     }
 
-    protected override void MatchInternal(JsonElement filterElement, T matchTarget)
+    protected override async Task MatchInternalAsync(JsonElement filterElement, T matchTarget)
     {
         var kv = filterElement.EnumerateObject().ToArray()[0];
 
         try
         {
             var filter = filterFactory.BoolFilterFactory.Get(kv.Name);
-            filter.Match(kv.Value, boolValueGetter(matchTarget));
+            await filter.MatchAsync(kv.Value, boolValueGetter(matchTarget));
         }
         catch (FilterException e)
         {

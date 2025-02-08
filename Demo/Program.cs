@@ -76,7 +76,7 @@ catch (FilterException e)
 
 try
 {
-    filterService.MustMatch(filterJson, player);
+    await filterService.MustMatchAsync(filterJson, player);
     printMatchSuccessfully(playerJson, filterJson);
 }
 catch (FilterException e)
@@ -94,7 +94,7 @@ else
     printFilterException(filterJson, filterException);
 }
 
-filterException = filterService.Match(filterJson, player);
+filterException = await filterService.MatchAsync(filterJson, player);
 if (filterException.StatusCode == FilterStatusCode.Ok)
 {
     printMatchSuccessfully(playerJson, filterJson);
@@ -105,7 +105,7 @@ else
 }
 
 var players = new [] { player };
-foreach (var filteredPlayer in filterService.FilterOut(filterJson, players))
+foreach (var filteredPlayer in await filterService.FilterOutAsync(filterJson, players))
 {
     printMatchSuccessfully(JsonSerializer.Serialize(filteredPlayer), filterJson);
 }
@@ -125,13 +125,13 @@ var jsonFilterService = new JsonPathFilterService();
 var jObject = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(playerJson)!;
 
 filterJson = "{\"$.User.Uid\": 1000000}";
-jsonFilterService.MustMatch(filterJson, jObject);
+await jsonFilterService.MustMatchAsync(filterJson, jObject);
 printMatchSuccessfully(playerJson, filterJson);
 
 try
 {
     filterJson = "{\"$.User.Uid\": \"2000000\"}";
-    jsonFilterService.MustMatch(filterJson, jObject);
+    await jsonFilterService.MustMatchAsync(filterJson, jObject);
 }
 catch (FilterException e)
 {

@@ -48,14 +48,14 @@ public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, Vers
         }
     }
 
-    protected override void MatchInternal(JsonElement filterElement, T matchTarget)
+    protected override async Task MatchInternalAsync(JsonElement filterElement, T matchTarget)
     {
         var kv = filterElement.EnumerateObject().ToArray()[0];
 
         try
         {
             var filter = filterFactory.VersionFilterFactory.Get(kv.Name);
-            filter.Match(kv.Value, versionValueGetter(matchTarget));
+            await filter.MatchAsync(kv.Value, versionValueGetter(matchTarget));
         }
         catch (FilterException e)
         {

@@ -11,5 +11,10 @@ public interface IFilter<T>
     string GetBasicType();
     void Valid(JsonElement element);
     Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter);
-    void Match(JsonElement element, T matchTarget);
+    /// <summary>
+    /// Needs to be asynchronous as cache may need to be loaded asynchronously
+    /// </summary>
+    /// <param name="element"></param>
+    /// <param name="matchTarget"></param>
+    Task MatchAsync(JsonElement element, T matchTarget);
 }

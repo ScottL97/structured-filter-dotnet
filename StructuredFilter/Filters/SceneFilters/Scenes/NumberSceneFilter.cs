@@ -47,14 +47,14 @@ public abstract class NumberSceneFilter<T>(FilterFactory<T> filterFactory, Numbe
         }
     }
 
-    protected override void MatchInternal(JsonElement filterElement, T matchTarget)
+    protected override async Task MatchInternalAsync(JsonElement filterElement, T matchTarget)
     {
         var kv = filterElement.EnumerateObject().ToArray()[0];
 
         try
         {
             var filter = filterFactory.NumberFilterFactory.Get(kv.Name);
-            filter.Match(kv.Value, numberValueGetter(matchTarget));
+            await filter.MatchAsync(kv.Value, numberValueGetter(matchTarget));
         }
         catch (FilterException e)
         {

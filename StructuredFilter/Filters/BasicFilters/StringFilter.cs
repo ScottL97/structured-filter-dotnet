@@ -74,13 +74,14 @@ internal class StringRegexFilter : Filter<string>, IStringFilter
         }
     }
 
-    public override void Match(JsonElement element, string matchTarget)
+    public override Task MatchAsync(JsonElement element, string matchTarget)
     {
         if (Regex.IsMatch(matchTarget, element.GetString()!, RegexOptions.None))
         {
-            return;
+            return Task.CompletedTask;
         }
 
         this.ThrowNotMatchException(matchTarget, element.ToString());
+        return Task.CompletedTask;
     }
 }

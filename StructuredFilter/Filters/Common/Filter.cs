@@ -36,5 +36,5 @@ public abstract class Filter<T> : IFilter<T>
     public abstract void Valid(JsonElement element);
 
     public abstract Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter);
-    public abstract void Match(JsonElement element, T matchTarget);
+    public abstract Task MatchAsync(JsonElement element, T matchTarget);
 }

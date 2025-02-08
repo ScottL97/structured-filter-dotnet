@@ -89,7 +89,7 @@ public class AndFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
         }
     }
 
-    public override void Match(JsonElement element, T matchTarget)
+    public override async Task MatchAsync(JsonElement element, T matchTarget)
     {
         try
         {
@@ -101,11 +101,11 @@ public class AndFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
                     
                         if (property.IsJsonPathFilter())
                         {
-                            sceneFilterFactory.Get(Consts.JsonPathFilterKey).Match(filterObject, matchTarget);
+                            await sceneFilterFactory.Get(Consts.JsonPathFilterKey).MatchAsync(filterObject, matchTarget);
                             continue;
                         }
                         var filter = sceneFilterFactory.Get(property.Name);
-                        filter.Match(property.Value, matchTarget);
+                        await filter.MatchAsync(property.Value, matchTarget);
                     
                 }
             }
@@ -168,7 +168,7 @@ public class OrFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
         throw new FilterException(FilterStatusCode.NotMatched, "no filters match $or", GetKey()).AppendFailedKeys(failedKeyPath);
     }
 
-    public override void Match(JsonElement element, T matchTarget)
+    public override async Task MatchAsync(JsonElement element, T matchTarget)
     {
         var failedKeyPath = new List<Tree<string>>();
         foreach (var filterObject in element.EnumerateArray())
@@ -179,11 +179,11 @@ public class OrFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
                 {
                     if (property.IsJsonPathFilter())
                     {
-                        sceneFilterFactory.Get(Consts.JsonPathFilterKey).Match(filterObject, matchTarget);
+                        await sceneFilterFactory.Get(Consts.JsonPathFilterKey).MatchAsync(filterObject, matchTarget);
                         continue;
                     }
                     var filter = sceneFilterFactory.Get(property.Name);
-                    filter.Match(property.Value, matchTarget);
+                    await filter.MatchAsync(property.Value, matchTarget);
                 }
                 catch (FilterException e)
                 {

@@ -47,14 +47,14 @@ public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, Strin
         }
     }
 
-    protected override void MatchInternal(JsonElement filterElement, T matchTarget)
+    protected override async Task MatchInternalAsync(JsonElement filterElement, T matchTarget)
     {
         var kv = filterElement.EnumerateObject().ToArray()[0];
 
         try
         {
             var filter = filterFactory.StringFilterFactory.Get(kv.Name);
-            filter.Match(kv.Value, stringValueGetter(matchTarget));
+            await filter.MatchAsync(kv.Value, stringValueGetter(matchTarget));
         }
         catch (FilterException e)
         {

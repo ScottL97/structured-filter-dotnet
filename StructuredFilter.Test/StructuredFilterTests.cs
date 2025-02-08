@@ -125,14 +125,14 @@ public partial class StructuredFilterTests
             await _filterService.LazyMustMatchAsync(filterJson, Player1Getter);
             Console.WriteLine($"player {Player1Json} lazy must match filter {filterJson} successfully");
 
-            _filterService.MustMatch(filterJson, Player1);
+            await _filterService.MustMatchAsync(filterJson, Player1);
             Console.WriteLine($"player {Player1Json} must match filter {filterJson} successfully");
 
             var filterException = await _filterService.LazyMatchAsync(filterJson, Player1Getter);
             Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
             Console.WriteLine($"player {Player1Json} lazy match filter {filterJson} successfully");
 
-            filterException = _filterService.Match(filterJson, Player1);
+            filterException = await _filterService.MatchAsync(filterJson, Player1);
             Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
             Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
         }
@@ -256,9 +256,9 @@ public partial class StructuredFilterTests
                 Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
             });
 
-            e = Assert.Throws<FilterException>(() =>
+            e = Assert.ThrowsAsync<FilterException>(async () =>
             {
-                _filterService.MustMatch(expect.FilterJson, Player1);
+                await _filterService.MustMatchAsync(expect.FilterJson, Player1);
             });
 
             Assert.Multiple(() =>
@@ -276,7 +276,7 @@ public partial class StructuredFilterTests
                 Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
             });
 
-            e = _filterService.Match(expect.FilterJson, Player1);
+            e = await _filterService.MatchAsync(expect.FilterJson, Player1);
             Assert.Multiple(() =>
             {
                 Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
@@ -323,34 +323,34 @@ public partial class StructuredFilterTests
     }
 
     [Test]
-    public void ShouldCacheFilterDocumentAfterFirstParse()
+    public async Task ShouldCacheFilterDocumentAfterFirstParse()
     {
         var filterJson = "{\"$and\": [{\"pid\": {\"$in\": [1000, 1001]}}, {\"userName\": {\"$eq\": \"Scott\"}}]}";
-        _filterService.MustMatch(filterJson, Player1);
+        await _filterService.MustMatchAsync(filterJson, Player1);
         Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
 
         // FilterDocument will be cached after first parse
         filterJson = "{\"$and\": [{\"pid\": {\"$in\": [1000, 1001]}}, {\"userName\": {\"$eq\": \"Scott\"}}]}";
-        _filterService.MustMatch(filterJson, Player1);
+        await _filterService.MustMatchAsync(filterJson, Player1);
         Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
     }
 
     [Test]
-    public void ShouldCacheFilterResultAfterFirstParse()
+    public async Task ShouldCacheFilterResultAfterFirstParse()
     {
         var filterJson = "{\"pid\": {\"$in\": [1000, 1001]}}";
-        _cacheableFilterService.MustMatch(filterJson, Player1);
+        await _cacheableFilterService.MustMatchAsync(filterJson, Player1);
         Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
 
         // filter result will be cached after first parse
         filterJson = "{\"pid\": {\"$in\": [1000, 1001]}}";
-        _cacheableFilterService.MustMatch(filterJson, Player1);
+        await _cacheableFilterService.MustMatchAsync(filterJson, Player1);
         Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
 
         filterJson = "{\"pid\": {\"$in\": [1001, 1002]}}";
-        var e = Assert.Throws<FilterException>(() =>
+        var e = Assert.ThrowsAsync<FilterException>(async () =>
         {
-            _cacheableFilterService.MustMatch(filterJson, Player1);
+            await _cacheableFilterService.MustMatchAsync(filterJson, Player1);
         });
         Assert.Multiple(() =>
         {
@@ -361,9 +361,9 @@ public partial class StructuredFilterTests
 
         // filter result will be cached after first parse
         filterJson = "{\"pid\": {\"$in\": [1001, 1002]}}";
-        e = Assert.Throws<FilterException>(() =>
+        e = Assert.ThrowsAsync<FilterException>(async () =>
         {
-            _cacheableFilterService.MustMatch(filterJson, Player1);
+            await _cacheableFilterService.MustMatchAsync(filterJson, Player1);
         });
         Assert.Multiple(() =>
         {
@@ -374,10 +374,10 @@ public partial class StructuredFilterTests
     }
 
     [Test]
-    public void ShouldFilterOutSuccessfully()
+    public async Task ShouldFilterOutSuccessfully()
     {
         var filterJson = "{\"pid\": {\"$in\": [1000, 1001]}}";
-        var filteredPlayers = _filterService.FilterOut(filterJson, Players).ToList();
+        var filteredPlayers = (await _filterService.FilterOutAsync(filterJson, Players)).ToList();
         Assert.That(filteredPlayers, Has.Count.EqualTo(1));
         Assert.That(filteredPlayers, Has.All.Matches<Player>(p => p.Pid == 1000));
     }
@@ -453,14 +453,14 @@ public partial class StructuredFilterTests
             await _jsonPathFilterService.LazyMustMatchAsync(filterJson, Player1JObjectGetter);
             Console.WriteLine($"player {Player1Json} lazy must match filter {filterJson} successfully");
 
-            _jsonPathFilterService.MustMatch(filterJson, Player1JObject);
+            await _jsonPathFilterService.MustMatchAsync(filterJson, Player1JObject);
             Console.WriteLine($"player {Player1Json} must match filter {filterJson} successfully");
 
             var filterException = await _jsonPathFilterService.LazyMatchAsync(filterJson, Player1JObjectGetter);
             Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
             Console.WriteLine($"player {Player1Json} lazy match filter {filterJson} successfully");
 
-            filterException = _jsonPathFilterService.Match(filterJson, Player1JObject);
+            filterException = await _jsonPathFilterService.MatchAsync(filterJson, Player1JObject);
             Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
             Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
         }
@@ -527,9 +527,9 @@ public partial class StructuredFilterTests
                 Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
             });
             
-            e = Assert.Throws<FilterException>(() =>
+            e = Assert.ThrowsAsync<FilterException>(async () =>
             {
-                _jsonPathFilterService.MustMatch(expect.FilterJson, Player1JObject);
+                await _jsonPathFilterService.MustMatchAsync(expect.FilterJson, Player1JObject);
             });
             
             Assert.Multiple(() =>
@@ -547,7 +547,7 @@ public partial class StructuredFilterTests
                 Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
             });
             
-            e = _jsonPathFilterService.Match(expect.FilterJson, Player1JObject);
+            e = await _jsonPathFilterService.MatchAsync(expect.FilterJson, Player1JObject);
             Assert.Multiple(() =>
             {
                 Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));

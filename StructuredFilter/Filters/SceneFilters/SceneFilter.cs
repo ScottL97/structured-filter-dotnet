@@ -93,11 +93,10 @@ public abstract class SceneFilter<T> : Filter<T>
             if (IsCacheable)
             {
                 var matchTarget = await matchTargetGetter.GetAsync();
-                var task = _cache!.GetFilterResultCacheAsync(matchTarget, filterElement);
-                task.Wait();
-                if (task.Result.Item2)
+                var (isMatched, isExists) = await _cache!.GetFilterResultCacheAsync(matchTarget, filterElement);
+                if (isExists)
                 {
-                    if (task.Result.Item1)
+                    if (isMatched)
                     {
                         return;
                     }
@@ -113,7 +112,7 @@ public abstract class SceneFilter<T> : Filter<T>
                 if (IsCacheable)
                 {
                     var matchTarget = await matchTargetGetter.GetAsync();
-                    _cache!.SetFilterResultCacheAsync(matchTarget, filterElement, true).Wait();
+                    await _cache!.SetFilterResultCacheAsync(matchTarget, filterElement, true);
                 }
             }
             catch (FilterException e) when (e.StatusCode == FilterStatusCode.NotMatched)
@@ -121,7 +120,7 @@ public abstract class SceneFilter<T> : Filter<T>
                 if (IsCacheable)
                 {
                     var matchTarget = await matchTargetGetter.GetAsync();
-                    _cache!.SetFilterResultCacheAsync(matchTarget, filterElement, false).Wait();
+                    await _cache!.SetFilterResultCacheAsync(matchTarget, filterElement, false);
                 }
                 throw;
             }
@@ -132,15 +131,14 @@ public abstract class SceneFilter<T> : Filter<T>
         }
     }
 
-    public override void Match(JsonElement filterElement, T matchTarget)
+    public override async Task MatchAsync(JsonElement filterElement, T matchTarget)
     {
         if (IsCacheable)
         {
-            var task = _cache!.GetFilterResultCacheAsync(matchTarget, filterElement);
-            task.Wait();
-            if (task.Result.Item2)
+            var (isMatched, isExists) = await _cache!.GetFilterResultCacheAsync(matchTarget, filterElement);
+            if (isExists)
             {
-                if (task.Result.Item1)
+                if (isMatched)
                 {
                     return;
                 }
@@ -152,7 +150,7 @@ public abstract class SceneFilter<T> : Filter<T>
         // there is no matching result in the cache, normal matching
         try
         {
-            MatchInternal(filterElement, matchTarget);
+            await MatchInternalAsync(filterElement, matchTarget);
             if (IsCacheable)
             {
                 _cache!.SetFilterResultCacheAsync(matchTarget, filterElement, true).Wait();
@@ -169,5 +167,5 @@ public abstract class SceneFilter<T> : Filter<T>
     }
 
     protected abstract Task LazyMatchInternalAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter);
-    protected abstract void MatchInternal(JsonElement element, T matchTarget);
+    protected abstract Task MatchInternalAsync(JsonElement element, T matchTarget);
 }

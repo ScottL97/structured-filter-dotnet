@@ -34,13 +34,14 @@ internal class InFilter<T>: Filter<T>
         }
     }
 
-    public override void Match(JsonElement element, T matchTarget)
+    public override Task MatchAsync(JsonElement element, T matchTarget)
     {
         if (element.EnumerateArray().Any(e => e.MatchEq(this, matchTarget)))
         {
-            return;
+            return Task.CompletedTask;
         }
 
         this.ThrowNotMatchException(matchTarget, element.ToString());
+        return Task.CompletedTask;
     }
 }
