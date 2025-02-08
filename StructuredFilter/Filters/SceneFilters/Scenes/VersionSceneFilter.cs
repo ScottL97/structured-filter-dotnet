@@ -8,7 +8,7 @@ using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters.SceneFilters.Scenes;
 
-[FilterType("VERSION")]
+[FilterType(FilterBasicType.Version)]
 public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, VersionSceneFilter<T>.VersionValueGetter versionValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
     protected delegate Task<Version> VersionValueGetter(T? matchTarget);

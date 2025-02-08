@@ -5,6 +5,19 @@ using System.Text.RegularExpressions;
 
 namespace StructuredFilter.Filters.Common.FilterTypes;
 
+public static class FilterBasicType
+{
+    public const string Bool = "BOOL";
+    public const string Number = "NUMBER";
+    public const string String = "STRING";
+    public const string Version = "VERSION";
+
+    public static bool IsValidFilterBasicType(string t)
+    {
+        return t is Bool or Number or String or Version;
+    }
+}
+
 public static class FilterTypeChecker
 {
     public delegate void JsonPropertyChecker(JsonProperty jsonProperty);

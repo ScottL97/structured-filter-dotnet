@@ -7,7 +7,7 @@ using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters.SceneFilters.Scenes;
 
-[FilterType("NUMBER")]
+[FilterType(FilterBasicType.Number)]
 public abstract class NumberSceneFilter<T>(FilterFactory<T> filterFactory, NumberSceneFilter<T>.NumberValueGetter numberValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
     protected delegate Task<double> NumberValueGetter(T? matchTarget);

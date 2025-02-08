@@ -7,10 +7,10 @@ using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters.SceneFilters.Scenes;
 
-[FilterType("BOOL")]
+[FilterType(FilterBasicType.Bool)]
 public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSceneFilter<T>.BoolValueGetter boolValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
-    protected delegate bool BoolValueGetter(T? matchTarget);
+    protected delegate Task<bool> BoolValueGetter(T? matchTarget);
 
     public override void Valid(JsonElement filterElement)
     {
@@ -38,7 +38,7 @@ public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSce
             await filter.LazyMatchAsync(kv.Value, new LazyObjectGetter<bool>(async _ =>
             {
                 var matchTarget = await matchTargetGetter.GetAsync();
-                return (boolValueGetter(matchTarget), true);
+                return (await boolValueGetter(matchTarget), true);
             }, matchTargetGetter.Args));
         }
         catch (FilterException e)
@@ -54,7 +54,7 @@ public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSce
         try
         {
             var filter = filterFactory.BoolFilterFactory.Get(kv.Name);
-            await filter.MatchAsync(kv.Value, boolValueGetter(matchTarget));
+            await filter.MatchAsync(kv.Value, await boolValueGetter(matchTarget));
         }
         catch (FilterException e)
         {

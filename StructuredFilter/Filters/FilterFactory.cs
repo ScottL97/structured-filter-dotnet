@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using StructuredFilter.Filters.BasicFilters;
 using StructuredFilter.Filters.Common;
+using StructuredFilter.Filters.Common.FilterTypes;
 using StructuredFilter.Filters.LogicFilters;
 using StructuredFilter.Filters.SceneFilters;
 
@@ -90,6 +92,22 @@ public class FilterFactory<T> : IFilterFactory<T>
         return this;
     }
 
+    public async Task<FilterFactory<T>> LoadDynamicSceneFiltersAsync(FilterOption<T>.GetDynamicFiltersAsync dynamicFiltersGetter,
+        FilterOption<T>.GetDynamicSceneFilterValueAsync dynamicSceneFilterValueGetter)
+    {
+        var filters = await dynamicFiltersGetter();
+        WithSceneFilters(filters.Select(f =>
+        {
+            if (!FilterBasicType.IsValidFilterBasicType(f.BasicType))
+            {
+                throw new FilterException(FilterStatusCode.OptionError, $"found invalid dynamic filter type {f.BasicType} with key {f.Key}");
+            }
+            return new DynamicSceneFilter<T>(this, dynamicSceneFilterValueGetter, f.Key, f.BasicType, f.Label);
+        }));
+
+        return this;
+    }
+
     public IFilter<T> Get(string key)
     {
         if (key.StartsWith("$.") || key.StartsWith("$["))
@@ -119,28 +137,28 @@ public class FilterFactory<T> : IFilterFactory<T>
 
             sceneFilterInfo.Logics = sceneFilterInfo.Type switch
             {
-                "BOOL" => BoolFilterFactory.GetAll()
+                FilterBasicType.Bool => BoolFilterFactory.GetAll()
                     .Select(kv =>
                     {
                         var boolFilter = kv.Value;
                         return new OperatorInfo { Label = boolFilter.GetLabel(), Value = boolFilter.GetKey() };
                     })
                     .ToArray(),
-                "NUMBER" => NumberFilterFactory.GetAll()
+                FilterBasicType.Number => NumberFilterFactory.GetAll()
                     .Select(kv =>
                     {
                         var numberFilter = kv.Value;
                         return new OperatorInfo { Label = numberFilter.GetLabel(), Value = numberFilter.GetKey() };
                     })
                     .ToArray(),
-                "STRING" => StringFilterFactory.GetAll()
+                FilterBasicType.String => StringFilterFactory.GetAll()
                     .Select(kv =>
                     {
                         var stringFilter = kv.Value;
                         return new OperatorInfo { Label = stringFilter.GetLabel(), Value = stringFilter.GetKey() };
                     })
                     .ToArray(),
-                "VERSION" => VersionFilterFactory.GetAll()
+                FilterBasicType.Version => VersionFilterFactory.GetAll()
                     .Select(kv =>
                     {
                         var versionFilter = kv.Value;

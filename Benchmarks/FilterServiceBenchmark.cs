@@ -14,7 +14,10 @@ public class FilterServiceBenchmark
         f => new PlayerGameVersionFilter(f)
     ]);
 
-    private readonly FilterService<Player> _filterServiceWithoutCache = new FilterService<Player>(false).WithSceneFilters([
+    private readonly FilterService<Player> _filterServiceWithoutCache = new FilterService<Player>(new FilterOption<Player>
+    {
+        EnableFilterDocumentCache = false
+    }).WithSceneFilters([
         f => new PidFilter(f),
         f => new UserNameFilter(f),
         f => new PlayerGameVersionFilter(f)

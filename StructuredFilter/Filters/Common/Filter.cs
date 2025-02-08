@@ -7,8 +7,17 @@ namespace StructuredFilter.Filters.Common;
 
 public abstract class Filter<T> : IFilter<T>
 {
+    protected string? KeyOverride { get; set; }
+    protected string? LabelOverride { get; set; }
+    protected string? BasicTypeOverride { get; set; }
+
     public string GetKey()
     {
+        if (!string.IsNullOrEmpty(KeyOverride))
+        {
+            return KeyOverride;
+        }
+
         var keyAttribute = (FilterKey?)Attribute.GetCustomAttribute(GetType(), typeof(FilterKey));
         if (keyAttribute == null)
         {
@@ -19,12 +28,22 @@ public abstract class Filter<T> : IFilter<T>
 
     public string GetLabel()
     {
+        if (!string.IsNullOrEmpty(LabelOverride))
+        {
+            return LabelOverride;
+        }
+
         var labelAttribute = (FilterLabel?)Attribute.GetCustomAttribute(GetType(), typeof(FilterLabel));
         return labelAttribute != null ? labelAttribute.Label : "UNKNOWN_LABEL";
     }
 
     public string GetBasicType()
     {
+        if (!string.IsNullOrEmpty(BasicTypeOverride))
+        {
+            return BasicTypeOverride;
+        }
+
         var typeAttribute = (FilterType?)Attribute.GetCustomAttribute(GetType(), typeof(FilterType));
         if (typeAttribute == null)
         {

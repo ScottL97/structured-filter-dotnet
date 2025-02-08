@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using StructuredFilter.Filters.Common;
+using StructuredFilter.Filters.SceneFilters;
 using StructuredFilter.Test.Models;
 using StructuredFilter.Test.Scenes;
 using StructuredFilter.Utils;
@@ -436,6 +437,155 @@ public partial class StructuredFilterTests
 
         filteredPlayers = (await _filterService.LazyFilterOutAsync(filterJson, playerGetters)).ToList();
         Assert.That(filteredPlayers, Has.Count.EqualTo(0));
+    }
+
+    [Test]
+    public async Task ShouldDynamicFiltersMatchSuccessfully()
+    {
+        var testDynamicFilterService = await new FilterService<Player>(new FilterOption<Player>
+        {
+            DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter[]
+            {
+                new ("rank", Label: "玩家等级")
+            }),
+            DynamicSceneFilterValueGetter = (player, filterKey) =>
+            {
+                if (filterKey == "rank")
+                {
+                    return Task.FromResult("10");
+                }
+
+                throw new Exception($"player dynamic key {filterKey} not found");
+            }
+        }).WithSceneFilters([
+            f => new PidFilter(f),
+            f => new UserNameFilter(f),
+            f => new PlayerGameVersionFilter(f)
+        ]).LoadDynamicSceneFilters();
+
+        var sceneFilterInfos = JsonSerializer.Serialize(testDynamicFilterService.GetSceneFilterInfos(), new JsonSerializerOptions
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            WriteIndented = true
+        });
+
+        Console.WriteLine(WhitespaceRegex().Replace(sceneFilterInfos, ""));
+        Assert.That(WhitespaceRegex().Replace(sceneFilterInfos, ""), Is.EqualTo("{\"pid\":{\"label\":\"玩家ID\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"NUMBER\"},\"userName\":{\"label\":\"用户名\",\"logics\":[{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"匹配正则表达式\",\"value\":\"$regex\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"}],\"type\":\"STRING\"},\"playerGameVersion\":{\"label\":\"玩家游戏版本\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"VERSION\"},\"rank\":{\"label\":\"玩家等级\",\"logics\":[{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"匹配正则表达式\",\"value\":\"$regex\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"}],\"type\":\"STRING\"}}"));
+
+        string[] filterJsons =
+        [
+            "{\"rank\": {\"$range\": [\"0\", \"50\"]}}",
+            string.Empty,
+            "{\"$and\": [{\"pid\": {\"$in\": [1000, 1001]}}, {\"rank\": {\"$eq\": \"10\"}}]}"
+        ];
+
+        foreach (var filterJson in filterJsons)
+        {
+            await testDynamicFilterService.LazyMustMatchAsync(filterJson, Player1Getter);
+            Console.WriteLine($"player {Player1Json} lazy must match filter {filterJson} successfully");
+
+            await testDynamicFilterService.MustMatchAsync(filterJson, Player1);
+            Console.WriteLine($"player {Player1Json} must match filter {filterJson} successfully");
+
+            var filterException = await testDynamicFilterService.LazyMatchAsync(filterJson, Player1Getter);
+            Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
+            Console.WriteLine($"player {Player1Json} lazy match filter {filterJson} successfully");
+
+            filterException = await testDynamicFilterService.MatchAsync(filterJson, Player1);
+            Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
+            Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
+        }
+    }
+
+    [Test]
+    public async Task ShouldDynamicFiltersMatchFailed()
+    {
+        var testDynamicFilterService = await new FilterService<Player>(new FilterOption<Player>
+        {
+            DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter[]
+            {
+                new ("rank", Label: "玩家等级")
+            }),
+            DynamicSceneFilterValueGetter = (player, filterKey) =>
+            {
+                if (filterKey == "rank")
+                {
+                    return Task.FromResult("10");
+                }
+
+                throw new Exception($"player dynamic key {filterKey} not found");
+            }
+        }).WithSceneFilters([
+            f => new PidFilter(f),
+            f => new UserNameFilter(f),
+            f => new PlayerGameVersionFilter(f)
+        ]).LoadDynamicSceneFilters();
+
+        ExceptionExpect[] expects =
+        [
+            new()
+            {
+                FilterJson = "{\"rank\": {\"$regex\": \"^2\"}}",
+                StatusCode = FilterStatusCode.NotMatched,
+                ErrorMessage = "matchTarget 10 of type System.String not match {$regex: ^2}",
+                FailedKeyPath = ["rank", "$regex"],
+            },
+            new()
+            {
+                FilterJson = "{\"rank\": {\"$eq\": 100}}",
+                StatusCode = FilterStatusCode.Invalid,
+                ErrorMessage = "filter 值 100 类型为 Number，期望类型为 String",
+                FailedKeyPath = ["rank", "$eq"],
+            },
+            new()
+            {
+                FilterJson = "{\"rank\": {\"wrong_key\": 100}}",
+                StatusCode = FilterStatusCode.Invalid,
+                ErrorMessage = "FilterFactory of type System.String 包含无效子 filter wrong_key",
+                FailedKeyPath = ["rank", "wrong_key"],
+            }
+        ];
+
+        foreach (var expect in expects)
+        {
+            var e = Assert.ThrowsAsync<FilterException>(() =>
+                testDynamicFilterService.LazyMustMatchAsync(expect.FilterJson, Player1Getter));
+            PrintFilterException(e);
+            Assert.Multiple(() =>
+            {
+                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
+                Assert.That(e.Message, Does.StartWith(expect.ErrorMessage));
+                Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
+            });
+
+            e = Assert.ThrowsAsync<FilterException>(async () =>
+            {
+                await testDynamicFilterService.MustMatchAsync(expect.FilterJson, Player1);
+            });
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
+                Assert.That(e.Message, Does.StartWith(expect.ErrorMessage));
+                Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
+            });
+            
+            e = await testDynamicFilterService.LazyMatchAsync(expect.FilterJson, Player1Getter);
+            Assert.Multiple(() =>
+            {
+                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
+                Assert.That(e.Message, Does.StartWith(expect.ErrorMessage));
+                Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
+            });
+
+            e = await testDynamicFilterService.MatchAsync(expect.FilterJson, Player1);
+            Assert.Multiple(() =>
+            {
+                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
+                Assert.That(e.Message, Does.StartWith(expect.ErrorMessage));
+                Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
+            });
+        }
     }
 
     [Test]

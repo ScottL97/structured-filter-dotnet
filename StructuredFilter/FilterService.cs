@@ -13,19 +13,35 @@ namespace StructuredFilter;
 
 public class JsonPathFilterService : FilterService<JObject>
 {
-    public JsonPathFilterService(bool withCache = true) : base(withCache)
+    public JsonPathFilterService(FilterOption<JObject>? option = null) : base(option)
     {
         WithSceneFilter(f => new JsonPathFilter(f));
     }
 }
 
-public class FilterService<T>(bool withCache = true)
+public class FilterService<T>(FilterOption<T>? option=null)
 {
     protected readonly FilterFactory<T> FilterFactory = new();
 
     private readonly ConcurrentDictionary<string, FilterDocument<T>> _filterDocuments = new ();
 
     public delegate IFilter<T> SceneFilterCreator(FilterFactory<T> filterFactory);
+    
+    private readonly FilterOption<T> _filterOption = option ?? new FilterOption<T>();
+
+    public async Task<FilterService<T>> LoadDynamicSceneFilters()
+    {
+        if (_filterOption.DynamicFiltersGetter is null || _filterOption.DynamicSceneFilterValueGetter is null)
+        {
+            throw new FilterException(FilterStatusCode.OptionError,
+                "WithDynamicSceneFilter is true but DynamicSceneFilterGetter is missing");
+        }
+        await FilterFactory.LoadDynamicSceneFiltersAsync(_filterOption.DynamicFiltersGetter,
+            _filterOption.DynamicSceneFilterValueGetter);
+
+        return this;
+    }
+
     public FilterService<T> WithSceneFilter(SceneFilterCreator sceneFilterCreator)
     {
         FilterFactory.WithSceneFilter(sceneFilterCreator(FilterFactory));
@@ -169,7 +185,7 @@ public class FilterService<T>(bool withCache = true)
 
     private FilterDocument<T> GetFilterDocument(string rawFilter)
     {
-        if (withCache)
+        if (_filterOption.EnableFilterDocumentCache)
         {
             return _filterDocuments.GetOrAdd(rawFilter, _ => new FilterDocument<T>(rawFilter, FilterFactory));
         }
@@ -181,4 +197,15 @@ public class FilterService<T>(bool withCache = true)
     {
         return FilterFactory.GetSceneFilterInfos();
     }
+}
+
+public class FilterOption<T>
+{
+    public bool EnableFilterDocumentCache { get; set; } = true;
+
+    public delegate Task<string> GetDynamicSceneFilterValueAsync(T? matchTarget, string filterKey);
+    public delegate Task<DynamicFilter[]> GetDynamicFiltersAsync();
+
+    public GetDynamicSceneFilterValueAsync? DynamicSceneFilterValueGetter { get; set; } = null;
+    public GetDynamicFiltersAsync? DynamicFiltersGetter { get; set; } = null;
 }

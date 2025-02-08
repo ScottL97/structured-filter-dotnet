@@ -10,7 +10,8 @@ public enum FilterStatusCode
     Ok, // 匹配成功
     MatchError, // 匹配代码异常
     NotMatched, // 不匹配
-    Invalid // 不合法
+    Invalid, // 不合法
+    OptionError, // Filter 配置错误
 }
 
 public class FilterException: Exception
