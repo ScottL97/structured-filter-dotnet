@@ -10,7 +10,7 @@ namespace StructuredFilter.Filters.SceneFilters.Scenes;
 [FilterType("NUMBER")]
 public abstract class NumberSceneFilter<T>(FilterFactory<T> filterFactory, NumberSceneFilter<T>.NumberValueGetter numberValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
-    protected delegate double NumberValueGetter(T? matchTarget);
+    protected delegate Task<double> NumberValueGetter(T? matchTarget);
 
     public override void Valid(JsonElement filterElement)
     {
@@ -38,7 +38,7 @@ public abstract class NumberSceneFilter<T>(FilterFactory<T> filterFactory, Numbe
             await filter.LazyMatchAsync(kv.Value, new LazyObjectGetter<double>(async _ =>
             {
                 var matchTarget = await matchTargetGetter.GetAsync();
-                return (numberValueGetter(matchTarget), true);
+                return (await numberValueGetter(matchTarget), true);
             }, matchTargetGetter.Args));
         }
         catch (FilterException e)
@@ -54,7 +54,7 @@ public abstract class NumberSceneFilter<T>(FilterFactory<T> filterFactory, Numbe
         try
         {
             var filter = filterFactory.NumberFilterFactory.Get(kv.Name);
-            await filter.MatchAsync(kv.Value, numberValueGetter(matchTarget));
+            await filter.MatchAsync(kv.Value, await numberValueGetter(matchTarget));
         }
         catch (FilterException e)
         {

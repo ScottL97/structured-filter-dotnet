@@ -11,7 +11,7 @@ namespace StructuredFilter.Test.Scenes.CacheableScenes;
 [FilterKey("pid")]
 [Cacheable]
 public class PidFilter(FilterFactory<Player> filterFactory)
-    : NumberSceneFilter<Player>(filterFactory, player => player.Pid, new PidFilterCache());
+    : NumberSceneFilter<Player>(filterFactory, player => Task.FromResult((double)player.Pid), new PidFilterCache());
 
 public class PidFilterCache : IFilterResultCache<Player>
 {

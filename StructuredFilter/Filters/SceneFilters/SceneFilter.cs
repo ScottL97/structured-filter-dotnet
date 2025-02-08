@@ -153,14 +153,14 @@ public abstract class SceneFilter<T> : Filter<T>
             await MatchInternalAsync(filterElement, matchTarget);
             if (IsCacheable)
             {
-                _cache!.SetFilterResultCacheAsync(matchTarget, filterElement, true).Wait();
+                await _cache!.SetFilterResultCacheAsync(matchTarget, filterElement, true);
             }
         }
         catch (FilterException e) when (e.StatusCode == FilterStatusCode.NotMatched)
         {
             if (IsCacheable)
             {
-                _cache!.SetFilterResultCacheAsync(matchTarget, filterElement, false).Wait();
+                await _cache!.SetFilterResultCacheAsync(matchTarget, filterElement, false);
             }
             throw;
         }

@@ -10,7 +10,7 @@ namespace StructuredFilter.Filters.SceneFilters.Scenes;
 [FilterType("STRING")]
 public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, StringSceneFilter<T>.StringValueGetter stringValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
-    protected delegate string StringValueGetter(T? matchTarget);
+    protected delegate Task<string> StringValueGetter(T? matchTarget);
 
     public override void Valid(JsonElement filterElement)
     {
@@ -38,7 +38,7 @@ public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, Strin
             await filter.LazyMatchAsync(kv.Value, new LazyObjectGetter<string>(async _ =>
             {
                 var matchTarget = await matchTargetGetter.GetAsync();
-                return (stringValueGetter(matchTarget), true);
+                return (await stringValueGetter(matchTarget), true);
             }, matchTargetGetter.Args));
         }
         catch (FilterException e)
@@ -54,7 +54,7 @@ public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, Strin
         try
         {
             var filter = filterFactory.StringFilterFactory.Get(kv.Name);
-            await filter.MatchAsync(kv.Value, stringValueGetter(matchTarget));
+            await filter.MatchAsync(kv.Value, await stringValueGetter(matchTarget));
         }
         catch (FilterException e)
         {

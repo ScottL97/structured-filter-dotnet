@@ -11,7 +11,7 @@ namespace StructuredFilter.Filters.SceneFilters.Scenes;
 [FilterType("VERSION")]
 public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, VersionSceneFilter<T>.VersionValueGetter versionValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
-    protected delegate Version VersionValueGetter(T? matchTarget);
+    protected delegate Task<Version> VersionValueGetter(T? matchTarget);
 
     public override void Valid(JsonElement filterElement)
     {
@@ -39,7 +39,7 @@ public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, Vers
             await filter.LazyMatchAsync(kv.Value, new LazyObjectGetter<Version>(async _ =>
             {
                 var matchTarget = await matchTargetGetter.GetAsync();
-                return (versionValueGetter(matchTarget), true);
+                return (await versionValueGetter(matchTarget), true);
             }, matchTargetGetter.Args));
         }
         catch (FilterException e)
@@ -55,7 +55,7 @@ public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, Vers
         try
         {
             var filter = filterFactory.VersionFilterFactory.Get(kv.Name);
-            await filter.MatchAsync(kv.Value, versionValueGetter(matchTarget));
+            await filter.MatchAsync(kv.Value, await versionValueGetter(matchTarget));
         }
         catch (FilterException e)
         {

@@ -7,4 +7,4 @@ namespace Demo.Scenes;
 [FilterLabel("玩家游戏版本")]
 [FilterKey("playerGameVersion")]
 public class PlayerGameVersionFilter(FilterFactory<Player> filterFactory)
-    : VersionSceneFilter<Player>(filterFactory, player => player.GameVersion);
+    : VersionSceneFilter<Player>(filterFactory, player => Task.FromResult(player.GameVersion));
