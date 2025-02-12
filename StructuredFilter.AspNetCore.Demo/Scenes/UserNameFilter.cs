@@ -8,4 +8,4 @@ namespace StructuredFilter.AspNetCore.Demo.Scenes;
 [FilterLabel("用户名")]
 [FilterKey("userName")]
 public class UserNameFilter(FilterFactory<Player> filterFactory)
-    : StringSceneFilter<Player>(filterFactory, player => player.User.Name);
+    : StringSceneFilter<Player>(filterFactory, player => Task.FromResult(player.User.Name));

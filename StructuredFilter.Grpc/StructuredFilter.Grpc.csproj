@@ -4,7 +4,7 @@
         <Authors>ScottLiu</Authors>
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <Version>0.0.1</Version>
+        <Version>0.0.2</Version>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>StructuredFilter.Grpc</PackageId>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
@@ -16,7 +16,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="StructuredFilter" Version="0.0.3" />
         <PackageReference Include="Google.Protobuf" Version="3.29.3" />
         <PackageReference Include="Grpc.Core" Version="2.46.6" />
         <PackageReference Include="Grpc.Tools" Version="2.69.0">

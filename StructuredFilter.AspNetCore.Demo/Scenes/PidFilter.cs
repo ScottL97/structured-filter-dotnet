@@ -8,4 +8,4 @@ namespace StructuredFilter.AspNetCore.Demo.Scenes;
 [FilterLabel("玩家 ID")]
 [FilterKey("pid")]
 public class PidFilter(FilterFactory<Player> filterFactory)
-    : NumberSceneFilter<Player>(filterFactory, player => player.Pid);
+    : NumberSceneFilter<Player>(filterFactory, player => Task.FromResult((double)player.Pid));

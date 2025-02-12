@@ -64,6 +64,6 @@ List<Player> players =
 
 const string rawFilter = "{\"pid\": {\"$range\": [1000, 1200]}}";
 
-app.MapGet("/players", (FilterService<Player> filterService) => filterService.FilterOut(rawFilter, players));
+app.MapGet("/players", (FilterService<Player> filterService) => filterService.FilterOutAsync(rawFilter, players));
 
 app.Run();
