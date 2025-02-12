@@ -62,3 +62,18 @@ public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, Strin
         }
     }
 }
+
+public class DynamicStringSceneFilter<T> : StringSceneFilter<T>
+{
+    public DynamicStringSceneFilter(FilterFactory<T> filterFactory,
+        FilterOption<T>.GetDynamicStringSceneFilterValueAsync dynamicSceneFilterValueGetter,
+        string key,
+        bool cacheable = false,
+        string? label = null) : base(filterFactory,
+        matchTarget => dynamicSceneFilterValueGetter(matchTarget, key))
+    {
+        KeyOverride = key;
+        CacheableOverride = cacheable;
+        LabelOverride = label;
+    }
+}

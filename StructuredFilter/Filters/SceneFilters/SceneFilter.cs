@@ -71,19 +71,33 @@ public class OperatorInfo
 
 public abstract class SceneFilter<T> : Filter<T>
 {
-    private bool IsCacheable { get; init; } = false;
+    private bool IsCacheable { get; set; } = false;
+    protected bool? CacheableOverride { get; set; }
     private readonly IFilterResultCache<T>? _cache;
 
-    protected SceneFilter(IFilterResultCache<T>? cache) : base()
+    protected SceneFilter(IFilterResultCache<T>? cache)
     {
-        if (Attribute.GetCustomAttribute(GetType(), typeof(Cacheable)) is null)
+        if (ConfigureIsCacheable())
         {
-            return;
+            _cache = cache ?? throw new FilterException(FilterStatusCode.Invalid,
+                $"type {GetType()} Cacheable Attribute is set but IFilterCache is null", $"<{GetType()}>");
+        }
+    }
+
+    private bool ConfigureIsCacheable()
+    {
+        if (CacheableOverride.HasValue)
+        {
+            IsCacheable = CacheableOverride.Value;
+            return IsCacheable;
         }
 
-        _cache = cache ?? throw new FilterException(FilterStatusCode.Invalid, $"type {GetType()} Cacheable Attribute is set but IFilterCache is null", $"<{GetType()}>");
+        if (Attribute.GetCustomAttribute(GetType(), typeof(Cacheable)) is not null)
+        {
+            IsCacheable = true;
+        }
 
-        IsCacheable = true;
+        return IsCacheable;
     }
 
     public override async Task LazyMatchAsync(JsonElement filterElement, LazyObjectGetter<T> matchTargetGetter)

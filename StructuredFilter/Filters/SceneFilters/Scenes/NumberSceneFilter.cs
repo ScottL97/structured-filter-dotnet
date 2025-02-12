@@ -62,3 +62,18 @@ public abstract class NumberSceneFilter<T>(FilterFactory<T> filterFactory, Numbe
         }
     }
 }
+
+public class DynamicNumberSceneFilter<T> : NumberSceneFilter<T>
+{
+    public DynamicNumberSceneFilter(FilterFactory<T> filterFactory,
+        FilterOption<T>.GetDynamicNumberSceneFilterValueAsync dynamicSceneFilterValueGetter,
+        string key,
+        bool cacheable = false,
+        string? label = null) : base(filterFactory,
+        matchTarget => dynamicSceneFilterValueGetter(matchTarget, key))
+    {
+        KeyOverride = key;
+        CacheableOverride = cacheable;
+        LabelOverride = label;
+    }
+}

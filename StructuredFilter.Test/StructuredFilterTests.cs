@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using StructuredFilter.Filters.Common;
+using StructuredFilter.Filters.Common.FilterTypes;
 using StructuredFilter.Filters.SceneFilters;
 using StructuredFilter.Test.Models;
 using StructuredFilter.Test.Scenes;
@@ -170,7 +171,7 @@ public partial class StructuredFilterTests
             {
                 FilterJson = "{\"playerGameVersion\": {\"wrong_key\": 100}}",
                 StatusCode = FilterStatusCode.Invalid,
-                ErrorMessage = "FilterFactory of type System.Version 包含无效子 filter wrong_key",
+                ErrorMessage = "FilterFactory of type System.Version 子 filter wrong_key 不存在",
                 FailedKeyPath = ["playerGameVersion", "wrong_key"],
             },
             new ()
@@ -446,13 +447,13 @@ public partial class StructuredFilterTests
         {
             DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter[]
             {
-                new ("rank", Label: "玩家等级")
+                new ("rank", FilterBasicType.Number, Label: "玩家等级")
             }),
-            DynamicSceneFilterValueGetter = (player, filterKey) =>
+            DynamicNumberSceneFilterValueGetter = (player, filterKey) =>
             {
                 if (filterKey == "rank")
                 {
-                    return Task.FromResult("10");
+                    return Task.FromResult((double)10);
                 }
 
                 throw new Exception($"player dynamic key {filterKey} not found");
@@ -470,13 +471,13 @@ public partial class StructuredFilterTests
         });
 
         Console.WriteLine(WhitespaceRegex().Replace(sceneFilterInfos, ""));
-        Assert.That(WhitespaceRegex().Replace(sceneFilterInfos, ""), Is.EqualTo("{\"pid\":{\"label\":\"玩家ID\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"NUMBER\"},\"userName\":{\"label\":\"用户名\",\"logics\":[{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"匹配正则表达式\",\"value\":\"$regex\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"}],\"type\":\"STRING\"},\"playerGameVersion\":{\"label\":\"玩家游戏版本\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"VERSION\"},\"rank\":{\"label\":\"玩家等级\",\"logics\":[{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"匹配正则表达式\",\"value\":\"$regex\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"}],\"type\":\"STRING\"}}"));
+        Assert.That(WhitespaceRegex().Replace(sceneFilterInfos, ""), Is.EqualTo("{\"pid\":{\"label\":\"玩家ID\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"NUMBER\"},\"userName\":{\"label\":\"用户名\",\"logics\":[{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"匹配正则表达式\",\"value\":\"$regex\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"}],\"type\":\"STRING\"},\"playerGameVersion\":{\"label\":\"玩家游戏版本\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"VERSION\"},\"rank\":{\"label\":\"玩家等级\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"NUMBER\"}}"));
 
         string[] filterJsons =
         [
-            "{\"rank\": {\"$range\": [\"0\", \"50\"]}}",
+            "{\"rank\": {\"$range\": [0, 50]}}",
             string.Empty,
-            "{\"$and\": [{\"pid\": {\"$in\": [1000, 1001]}}, {\"rank\": {\"$eq\": \"10\"}}]}"
+            "{\"$and\": [{\"pid\": {\"$in\": [1000, 1001]}}, {\"rank\": {\"$eq\": 10}}]}"
         ];
 
         foreach (var filterJson in filterJsons)
@@ -504,13 +505,13 @@ public partial class StructuredFilterTests
         {
             DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter[]
             {
-                new ("rank", Label: "玩家等级")
+                new ("rank", FilterBasicType.Number, Label: "玩家等级")
             }),
-            DynamicSceneFilterValueGetter = (player, filterKey) =>
+            DynamicNumberSceneFilterValueGetter = (player, filterKey) =>
             {
                 if (filterKey == "rank")
                 {
-                    return Task.FromResult("10");
+                    return Task.FromResult((double)10);
                 }
 
                 throw new Exception($"player dynamic key {filterKey} not found");
@@ -525,23 +526,23 @@ public partial class StructuredFilterTests
         [
             new()
             {
-                FilterJson = "{\"rank\": {\"$regex\": \"^2\"}}",
+                FilterJson = "{\"rank\": {\"$gt\": 20}}",
                 StatusCode = FilterStatusCode.NotMatched,
-                ErrorMessage = "matchTarget 10 of type System.String not match {$regex: ^2}",
-                FailedKeyPath = ["rank", "$regex"],
+                ErrorMessage = "matchTarget 10 of type System.Double not match {$gt: 20}",
+                FailedKeyPath = ["rank", "$gt"],
             },
             new()
             {
-                FilterJson = "{\"rank\": {\"$eq\": 100}}",
+                FilterJson = "{\"rank\": {\"$eq\": \"100\"}}",
                 StatusCode = FilterStatusCode.Invalid,
-                ErrorMessage = "filter 值 100 类型为 Number，期望类型为 String",
+                ErrorMessage = "filter 值 100 类型为 String，期望类型为 Number",
                 FailedKeyPath = ["rank", "$eq"],
             },
             new()
             {
                 FilterJson = "{\"rank\": {\"wrong_key\": 100}}",
                 StatusCode = FilterStatusCode.Invalid,
-                ErrorMessage = "FilterFactory of type System.String 包含无效子 filter wrong_key",
+                ErrorMessage = "FilterFactory of type System.Double 子 filter wrong_key 不存在",
                 FailedKeyPath = ["rank", "wrong_key"],
             }
         ];

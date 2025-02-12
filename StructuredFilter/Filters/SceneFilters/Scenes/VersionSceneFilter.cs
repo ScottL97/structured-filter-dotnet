@@ -63,3 +63,18 @@ public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, Vers
         }
     }
 }
+
+public class DynamicVersionSceneFilter<T> : VersionSceneFilter<T>
+{
+    public DynamicVersionSceneFilter(FilterFactory<T> filterFactory,
+        FilterOption<T>.GetDynamicVersionSceneFilterValueAsync dynamicSceneFilterValueGetter,
+        string key,
+        bool cacheable = false,
+        string? label = null) : base(filterFactory,
+        matchTarget => dynamicSceneFilterValueGetter(matchTarget, key))
+    {
+        KeyOverride = key;
+        CacheableOverride = cacheable;
+        LabelOverride = label;
+    }
+}

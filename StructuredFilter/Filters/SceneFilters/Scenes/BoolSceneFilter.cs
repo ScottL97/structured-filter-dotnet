@@ -62,3 +62,18 @@ public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSce
         }
     }
 }
+
+public class DynamicBoolSceneFilter<T> : BoolSceneFilter<T>
+{
+    public DynamicBoolSceneFilter(FilterFactory<T> filterFactory,
+        FilterOption<T>.GetDynamicBoolSceneFilterValueAsync dynamicSceneFilterValueGetter,
+        string key,
+        bool cacheable = false,
+        string? label = null) : base(filterFactory,
+        matchTarget => dynamicSceneFilterValueGetter(matchTarget, key))
+    {
+        KeyOverride = key;
+        CacheableOverride = cacheable;
+        LabelOverride = label;
+    }
+}

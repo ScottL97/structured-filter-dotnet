@@ -6,6 +6,7 @@ using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.Common.FilterTypes;
 using StructuredFilter.Filters.LogicFilters;
 using StructuredFilter.Filters.SceneFilters;
+using StructuredFilter.Filters.SceneFilters.Scenes;
 
 namespace StructuredFilter.Filters;
 
@@ -92,17 +93,34 @@ public class FilterFactory<T> : IFilterFactory<T>
         return this;
     }
 
-    public async Task<FilterFactory<T>> LoadDynamicSceneFiltersAsync(FilterOption<T>.GetDynamicFiltersAsync dynamicFiltersGetter,
-        FilterOption<T>.GetDynamicSceneFilterValueAsync dynamicSceneFilterValueGetter)
+    public async Task<FilterFactory<T>> LoadDynamicSceneFiltersAsync(FilterOption<T> filterOption)
     {
-        var filters = await dynamicFiltersGetter();
+        if (filterOption.IsDynamicFiltersGetterConfigured() && !filterOption.IsDynamicSceneFilterValueGetterConfigured())
+        {
+            throw new FilterException(FilterStatusCode.OptionError,
+                "DynamicFiltersGetter is configured but no DynamicSceneFilterGetters are configured");
+        }
+
+        var filters = await filterOption.DynamicFiltersGetter!();
         WithSceneFilters(filters.Select(f =>
         {
             if (!FilterBasicType.IsValidFilterBasicType(f.BasicType))
             {
                 throw new FilterException(FilterStatusCode.OptionError, $"found invalid dynamic filter type {f.BasicType} with key {f.Key}");
             }
-            return new DynamicSceneFilter<T>(this, dynamicSceneFilterValueGetter, f.Key, f.BasicType, f.Label);
+
+            return f.BasicType switch
+            {
+                FilterBasicType.Bool => (IFilter<T>)new DynamicBoolSceneFilter<T>(this,
+                    filterOption.DynamicBoolSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label),
+                FilterBasicType.Number => (IFilter<T>)new DynamicNumberSceneFilter<T>(this,
+                    filterOption.DynamicNumberSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label),
+                FilterBasicType.String => (IFilter<T>)new DynamicStringSceneFilter<T>(this,
+                    filterOption.DynamicStringSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label),
+                FilterBasicType.Version => (IFilter<T>)new DynamicVersionSceneFilter<T>(this,
+                    filterOption.DynamicVersionSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label),
+                _ => throw new FilterException(FilterStatusCode.OptionError, $"unknown filter basic type {f.BasicType} with key {f.Key}")
+            };
         }));
 
         return this;

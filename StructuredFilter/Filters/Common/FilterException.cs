@@ -82,7 +82,7 @@ public static class FilterExceptionExtensions
 
     public static void ThrowSubFilterNotFoundException<T>(this IFilterFactory<T> filterFactory, string filterKey)
     {
-        throw new FilterException(FilterStatusCode.Invalid, $"FilterFactory of type {typeof(T)} 包含无效子 filter {filterKey}", filterKey);
+        throw new FilterException(FilterStatusCode.Invalid, $"FilterFactory of type {typeof(T)} 子 filter {filterKey} 不存在", filterKey);
     }
 
     public static void ThrowFilterValueTypeMismatchException<T>(this IFilter<T> filter, JsonElement element, JsonValueKind expectedType, bool prependFailedKey=true)

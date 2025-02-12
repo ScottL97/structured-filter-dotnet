@@ -31,13 +31,7 @@ public class FilterService<T>(FilterOption<T>? option=null)
 
     public async Task<FilterService<T>> LoadDynamicSceneFilters()
     {
-        if (_filterOption.DynamicFiltersGetter is null || _filterOption.DynamicSceneFilterValueGetter is null)
-        {
-            throw new FilterException(FilterStatusCode.OptionError,
-                "WithDynamicSceneFilter is true but DynamicSceneFilterGetter is missing");
-        }
-        await FilterFactory.LoadDynamicSceneFiltersAsync(_filterOption.DynamicFiltersGetter,
-            _filterOption.DynamicSceneFilterValueGetter);
+        await FilterFactory.LoadDynamicSceneFiltersAsync(_filterOption);
 
         return this;
     }
@@ -197,15 +191,4 @@ public class FilterService<T>(FilterOption<T>? option=null)
     {
         return FilterFactory.GetSceneFilterInfos();
     }
-}
-
-public class FilterOption<T>
-{
-    public bool EnableFilterDocumentCache { get; set; } = true;
-
-    public delegate Task<string> GetDynamicSceneFilterValueAsync(T? matchTarget, string filterKey);
-    public delegate Task<DynamicFilter[]> GetDynamicFiltersAsync();
-
-    public GetDynamicSceneFilterValueAsync? DynamicSceneFilterValueGetter { get; set; } = null;
-    public GetDynamicFiltersAsync? DynamicFiltersGetter { get; set; } = null;
 }
