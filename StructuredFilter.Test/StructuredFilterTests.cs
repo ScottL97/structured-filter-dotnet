@@ -6,7 +6,10 @@ using StructuredFilter.Filters.Common.FilterTypes;
 using StructuredFilter.Filters.SceneFilters;
 using StructuredFilter.Test.Models;
 using StructuredFilter.Test.Scenes;
+using StructuredFilter.Test.Scenes.CacheableScenes;
 using StructuredFilter.Utils;
+using Exception = System.Exception;
+using PidFilter = StructuredFilter.Test.Scenes.PidFilter;
 
 namespace StructuredFilter.Test;
 
@@ -122,22 +125,7 @@ public partial class StructuredFilterTests
             "{\"userName\": {\"$regex\": \"^S\"}}"
         ];
 
-        foreach (var filterJson in filterJsons)
-        {
-            await _filterService.LazyMustMatchAsync(filterJson, Player1Getter);
-            Console.WriteLine($"player {Player1Json} lazy must match filter {filterJson} successfully");
-
-            await _filterService.MustMatchAsync(filterJson, Player1);
-            Console.WriteLine($"player {Player1Json} must match filter {filterJson} successfully");
-
-            var filterException = await _filterService.LazyMatchAsync(filterJson, Player1Getter);
-            Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
-            Console.WriteLine($"player {Player1Json} lazy match filter {filterJson} successfully");
-
-            filterException = await _filterService.MatchAsync(filterJson, Player1);
-            Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
-            Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
-        }
+        await AssertPlayer1MatchSuccessfully(filterJsons, _filterService);
     }
 
     private record ExceptionExpect
@@ -145,7 +133,9 @@ public partial class StructuredFilterTests
         public string FilterJson { get; set; }
         public FilterStatusCode StatusCode { get; set; }
         public string ErrorMessage { get; set; }
+        public string? ErrorMessage2 { get; set; } = null;
         public List<string> FailedKeyPath { get; set; }
+        public List<string>? FailedKeyPath2 { get; set; } = null;
     }
 
     // TODO: 覆盖所有异常
@@ -218,6 +208,20 @@ public partial class StructuredFilterTests
             },
             new ()
             {
+                FilterJson = "[]",
+                StatusCode = FilterStatusCode.Invalid,
+                ErrorMessage = "无效的 filter 根节点类型：Array",
+                FailedKeyPath = ["<UNKNOWN>"],
+            },
+            new ()
+            {
+                FilterJson = "{}",
+                StatusCode = FilterStatusCode.Invalid,
+                ErrorMessage = "对象键值对数需要为 1，但 filter 根节点对象 {} 有 0 对键值对",
+                FailedKeyPath = ["<UNKNOWN>"],
+            },
+            new ()
+            {
                 FilterJson = "{\"userName\":{}}",
                 StatusCode = FilterStatusCode.Invalid,
                 ErrorMessage = "对象键值对数需要为 1，{} 有 0 对键值对",
@@ -246,46 +250,7 @@ public partial class StructuredFilterTests
             }
         ];
 
-        foreach (var expect in expects)
-        {
-            var e = Assert.ThrowsAsync<FilterException>(() =>
-                _filterService.LazyMustMatchAsync(expect.FilterJson, Player1Getter));
-            PrintFilterException(e);
-            Assert.Multiple(() =>
-            {
-                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
-                Assert.That(e.Message, Does.StartWith(expect.ErrorMessage));
-                Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
-            });
-
-            e = Assert.ThrowsAsync<FilterException>(async () =>
-            {
-                await _filterService.MustMatchAsync(expect.FilterJson, Player1);
-            });
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
-                Assert.That(e.Message, Does.StartWith(expect.ErrorMessage));
-                Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
-            });
-            
-            e = await _filterService.LazyMatchAsync(expect.FilterJson, Player1Getter);
-            Assert.Multiple(() =>
-            {
-                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
-                Assert.That(e.Message, Does.StartWith(expect.ErrorMessage));
-                Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
-            });
-
-            e = await _filterService.MatchAsync(expect.FilterJson, Player1);
-            Assert.Multiple(() =>
-            {
-                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
-                Assert.That(e.Message, Does.StartWith(expect.ErrorMessage));
-                Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
-            });
-        }
+        await AssertPlayer1ExpectExceptions(expects, _filterService);
     }
 
     [Test]
@@ -325,20 +290,7 @@ public partial class StructuredFilterTests
     }
 
     [Test]
-    public async Task ShouldCacheFilterDocumentAfterFirstParse()
-    {
-        var filterJson = "{\"$and\": [{\"pid\": {\"$in\": [1000, 1001]}}, {\"userName\": {\"$eq\": \"Scott\"}}]}";
-        await _filterService.MustMatchAsync(filterJson, Player1);
-        Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
-
-        // FilterDocument will be cached after first parse
-        filterJson = "{\"$and\": [{\"pid\": {\"$in\": [1000, 1001]}}, {\"userName\": {\"$eq\": \"Scott\"}}]}";
-        await _filterService.MustMatchAsync(filterJson, Player1);
-        Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
-    }
-
-    [Test]
-    public async Task ShouldCacheFilterResultAfterFirstParse()
+    public async Task ShouldCacheableFiltersCacheFilterResultAfterFirstParse()
     {
         var filterJson = "{\"pid\": {\"$in\": [1000, 1001]}}";
         await _cacheableFilterService.MustMatchAsync(filterJson, Player1);
@@ -441,11 +393,201 @@ public partial class StructuredFilterTests
     }
 
     [Test]
+    public async Task ShouldCacheableDynamicFiltersMatchSuccessfully()
+    {
+        var cache = new PlayerFilterCache();
+        var testCacheableDynamicFilterService = await new FilterService<Player>(new FilterOption<Player>
+        {
+            DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter<Player>[]
+            {
+                new ("rank", FilterBasicType.Number, true, "玩家等级", cache)
+            }),
+            DynamicNumberSceneFilterValueGetter = (player, filterKey) =>
+            {
+                if (filterKey == "rank")
+                {
+                    return Task.FromResult((double)10);
+                }
+
+                throw new Exception($"player dynamic key {filterKey} not found");
+            }
+        }).WithSceneFilters([
+            f => new PidFilter(f),
+            f => new UserNameFilter(f),
+            f => new PlayerGameVersionFilter(f)
+        ]).LoadDynamicSceneFilters();
+
+        string[] filterJsons =
+        [
+            "{\"rank\": {\"$range\": [0, 50]}}",
+            "{\"rank\": {\"$range\": [0, 50]}}"
+        ];
+
+        await AssertPlayer1MatchSuccessfully(filterJsons, testCacheableDynamicFilterService);
+
+        Assert.That(cache.HitCount, Is.EqualTo(filterJsons.Length * 4 - 1));
+    }
+
+    private static async Task AssertPlayer1MatchSuccessfully(string[] filterJsons, FilterService<Player> filterService)
+    {
+        foreach (var filterJson in filterJsons)
+        {
+            await filterService.LazyMustMatchAsync(filterJson, Player1Getter);
+            Console.WriteLine($"player {Player1Json} lazy must match filter {filterJson} successfully");
+
+            await filterService.MustMatchAsync(filterJson, Player1);
+            Console.WriteLine($"player {Player1Json} must match filter {filterJson} successfully");
+
+            var filterException = await filterService.LazyMatchAsync(filterJson, Player1Getter);
+            Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
+            Console.WriteLine($"player {Player1Json} lazy match filter {filterJson} successfully");
+
+            filterException = await filterService.MatchAsync(filterJson, Player1);
+            Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
+            Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
+        }
+    }
+
+    [Test]
+    public async Task ShouldCacheableDynamicFiltersMatchFailed()
+    {
+        var cache = new PlayerFilterCache();
+        var testCacheableDynamicFilterService = await new FilterService<Player>(new FilterOption<Player>
+        {
+            DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter<Player>[]
+            {
+                new ("rank", FilterBasicType.Number, true, "玩家等级", cache)
+            }),
+            DynamicNumberSceneFilterValueGetter = (player, filterKey) =>
+            {
+                if (filterKey == "rank")
+                {
+                    return Task.FromResult((double)10);
+                }
+
+                throw new Exception($"player dynamic key {filterKey} not found");
+            }
+        }).WithSceneFilters([
+            f => new PidFilter(f),
+            f => new UserNameFilter(f),
+            f => new PlayerGameVersionFilter(f)
+        ]).LoadDynamicSceneFilters();
+
+        ExceptionExpect[] expects =
+        [
+            new()
+            {
+                FilterJson = "{\"rank\": {\"$regex\": \"^A\"}}",
+                StatusCode = FilterStatusCode.Invalid,
+                ErrorMessage = "FilterFactory of type System.Double 子 filter $regex 不存在",
+                FailedKeyPath = ["rank", "$regex"],
+            },
+            new()
+            {
+                FilterJson = "{\"rank\": {\"$regex\": \"^A\"}}",
+                StatusCode = FilterStatusCode.Invalid,
+                ErrorMessage = "FilterFactory of type System.Double 子 filter $regex 不存在",
+                FailedKeyPath = ["rank", "$regex"],
+            },
+            new()
+            {
+                FilterJson = "{\"rank\": {\"$range\": [50, 100]}}",
+                StatusCode = FilterStatusCode.NotMatched,
+                ErrorMessage = "matchTarget 10 of type System.Double not match {$range: [50,100]}",
+                ErrorMessage2 = "matchTarget StructuredFilter.Test.Models.Player of type StructuredFilter.Test.Models.Player not match {rank: {\"$range\":[50,100]}} according to cache",
+                FailedKeyPath = ["rank", "$range"],
+                FailedKeyPath2 = ["rank"],
+            },
+            new()
+            {
+                FilterJson = "{\"rank\": {\"$range\": [50, 100]}}",
+                StatusCode = FilterStatusCode.NotMatched,
+                ErrorMessage = "matchTarget StructuredFilter.Test.Models.Player of type StructuredFilter.Test.Models.Player not match {rank: {\"$range\":[50,100]}} according to cache",
+                FailedKeyPath = ["rank", "$range"],
+                FailedKeyPath2 = ["rank"],
+            }
+        ];
+
+        await AssertPlayer1ExpectExceptions(expects, testCacheableDynamicFilterService);
+
+        Assert.That(cache.HitCount, Is.EqualTo(expects.Count(e => e.StatusCode == FilterStatusCode.NotMatched) * 4 - 1));
+    }
+
+    private static async Task AssertPlayer1ExpectExceptions(ExceptionExpect[] expects,
+        FilterService<Player> filterService)
+    {
+        foreach (var expect in expects)
+        {
+            var e = Assert.ThrowsAsync<FilterException>(() =>
+                filterService.LazyMustMatchAsync(expect.FilterJson, Player1Getter));
+            PrintFilterException(e);
+            Assert.Multiple(() =>
+            {
+                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
+                Assert.That(e.Message,
+                    expect.ErrorMessage2 != null
+                        ? Does.StartWith(expect.ErrorMessage).Or.StartsWith(expect.ErrorMessage2)
+                        : Does.StartWith(expect.ErrorMessage));
+                Assert.That(e.FailedKeyPath.Traverse().ToList(),
+                    expect.FailedKeyPath2 != null
+                        ? Is.EqualTo(expect.FailedKeyPath).Or.EqualTo(expect.FailedKeyPath2)
+                        : Is.EqualTo(expect.FailedKeyPath));
+            });
+
+            e = Assert.ThrowsAsync<FilterException>(async () =>
+            {
+                await filterService.MustMatchAsync(expect.FilterJson, Player1);
+            });
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
+                Assert.That(e.Message,
+                    expect.ErrorMessage2 != null
+                        ? Does.StartWith(expect.ErrorMessage).Or.StartsWith(expect.ErrorMessage2)
+                        : Does.StartWith(expect.ErrorMessage));
+                Assert.That(e.FailedKeyPath.Traverse().ToList(),
+                    expect.FailedKeyPath2 != null
+                        ? Is.EqualTo(expect.FailedKeyPath).Or.EqualTo(expect.FailedKeyPath2)
+                        : Is.EqualTo(expect.FailedKeyPath));
+            });
+
+            e = await filterService.LazyMatchAsync(expect.FilterJson, Player1Getter);
+            Assert.Multiple(() =>
+            {
+                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
+                Assert.That(e.Message,
+                    expect.ErrorMessage2 != null
+                        ? Does.StartWith(expect.ErrorMessage).Or.StartsWith(expect.ErrorMessage2)
+                        : Does.StartWith(expect.ErrorMessage));
+                Assert.That(e.FailedKeyPath.Traverse().ToList(),
+                    expect.FailedKeyPath2 != null
+                        ? Is.EqualTo(expect.FailedKeyPath).Or.EqualTo(expect.FailedKeyPath2)
+                        : Is.EqualTo(expect.FailedKeyPath));
+            });
+
+            e = await filterService.MatchAsync(expect.FilterJson, Player1);
+            Assert.Multiple(() =>
+            {
+                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
+                Assert.That(e.Message,
+                    expect.ErrorMessage2 != null
+                        ? Does.StartWith(expect.ErrorMessage).Or.StartsWith(expect.ErrorMessage2)
+                        : Does.StartWith(expect.ErrorMessage));
+                Assert.That(e.FailedKeyPath.Traverse().ToList(),
+                    expect.FailedKeyPath2 != null
+                        ? Is.EqualTo(expect.FailedKeyPath).Or.EqualTo(expect.FailedKeyPath2)
+                        : Is.EqualTo(expect.FailedKeyPath));
+            });
+        }
+    }
+
+    [Test]
     public async Task ShouldDynamicFiltersMatchSuccessfully()
     {
         var testDynamicFilterService = await new FilterService<Player>(new FilterOption<Player>
         {
-            DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter[]
+            DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter<Player>[]
             {
                 new ("rank", FilterBasicType.Number, Label: "玩家等级")
             }),
@@ -479,23 +621,8 @@ public partial class StructuredFilterTests
             string.Empty,
             "{\"$and\": [{\"pid\": {\"$in\": [1000, 1001]}}, {\"rank\": {\"$eq\": 10}}]}"
         ];
-
-        foreach (var filterJson in filterJsons)
-        {
-            await testDynamicFilterService.LazyMustMatchAsync(filterJson, Player1Getter);
-            Console.WriteLine($"player {Player1Json} lazy must match filter {filterJson} successfully");
-
-            await testDynamicFilterService.MustMatchAsync(filterJson, Player1);
-            Console.WriteLine($"player {Player1Json} must match filter {filterJson} successfully");
-
-            var filterException = await testDynamicFilterService.LazyMatchAsync(filterJson, Player1Getter);
-            Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
-            Console.WriteLine($"player {Player1Json} lazy match filter {filterJson} successfully");
-
-            filterException = await testDynamicFilterService.MatchAsync(filterJson, Player1);
-            Assert.That(filterException.StatusCode, Is.EqualTo(FilterStatusCode.Ok));
-            Console.WriteLine($"player {Player1Json} match filter {filterJson} successfully");
-        }
+        
+        await AssertPlayer1MatchSuccessfully(filterJsons, testDynamicFilterService);
     }
 
     [Test]
@@ -503,7 +630,7 @@ public partial class StructuredFilterTests
     {
         var testDynamicFilterService = await new FilterService<Player>(new FilterOption<Player>
         {
-            DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter[]
+            DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter<Player>[]
             {
                 new ("rank", FilterBasicType.Number, Label: "玩家等级")
             }),
@@ -546,47 +673,8 @@ public partial class StructuredFilterTests
                 FailedKeyPath = ["rank", "wrong_key"],
             }
         ];
-
-        foreach (var expect in expects)
-        {
-            var e = Assert.ThrowsAsync<FilterException>(() =>
-                testDynamicFilterService.LazyMustMatchAsync(expect.FilterJson, Player1Getter));
-            PrintFilterException(e);
-            Assert.Multiple(() =>
-            {
-                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
-                Assert.That(e.Message, Does.StartWith(expect.ErrorMessage));
-                Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
-            });
-
-            e = Assert.ThrowsAsync<FilterException>(async () =>
-            {
-                await testDynamicFilterService.MustMatchAsync(expect.FilterJson, Player1);
-            });
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
-                Assert.That(e.Message, Does.StartWith(expect.ErrorMessage));
-                Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
-            });
-            
-            e = await testDynamicFilterService.LazyMatchAsync(expect.FilterJson, Player1Getter);
-            Assert.Multiple(() =>
-            {
-                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
-                Assert.That(e.Message, Does.StartWith(expect.ErrorMessage));
-                Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
-            });
-
-            e = await testDynamicFilterService.MatchAsync(expect.FilterJson, Player1);
-            Assert.Multiple(() =>
-            {
-                Assert.That(e.StatusCode, Is.EqualTo(expect.StatusCode));
-                Assert.That(e.Message, Does.StartWith(expect.ErrorMessage));
-                Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
-            });
-        }
+        
+        await AssertPlayer1ExpectExceptions(expects, testDynamicFilterService);
     }
 
     [Test]

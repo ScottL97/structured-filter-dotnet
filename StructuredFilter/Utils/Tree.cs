@@ -4,19 +4,12 @@ using System.Collections.Generic;
 
 public sealed class TreeNode<T>(T value)
 {
-    public T Value { get; set; } = value;
-    public List<TreeNode<T>> Children { get; set; } = [];
+    public T Value { get; } = value;
+    public List<TreeNode<T>> Children { get; } = [];
 
     public void AddChild(TreeNode<T> child)
     {
         Children.Add(child);
-    }
-
-    public TreeNode<T> AddChild(T childValue)
-    {
-        var child = new TreeNode<T>(childValue);
-        Children.Add(child);
-        return child;
     }
 }
 

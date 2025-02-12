@@ -112,13 +112,13 @@ public class FilterFactory<T> : IFilterFactory<T>
             return f.BasicType switch
             {
                 FilterBasicType.Bool => (IFilter<T>)new DynamicBoolSceneFilter<T>(this,
-                    filterOption.DynamicBoolSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label),
+                    filterOption.DynamicBoolSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
                 FilterBasicType.Number => (IFilter<T>)new DynamicNumberSceneFilter<T>(this,
-                    filterOption.DynamicNumberSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label),
+                    filterOption.DynamicNumberSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
                 FilterBasicType.String => (IFilter<T>)new DynamicStringSceneFilter<T>(this,
-                    filterOption.DynamicStringSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label),
+                    filterOption.DynamicStringSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
                 FilterBasicType.Version => (IFilter<T>)new DynamicVersionSceneFilter<T>(this,
-                    filterOption.DynamicVersionSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label),
+                    filterOption.DynamicVersionSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
                 _ => throw new FilterException(FilterStatusCode.OptionError, $"unknown filter basic type {f.BasicType} with key {f.Key}")
             };
         }));

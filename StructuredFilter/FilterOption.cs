@@ -27,7 +27,7 @@ public class FilterOption<T>
     /// <summary>
     /// Method to obtain dynamic filters
     /// </summary>
-    public delegate Task<DynamicFilter[]> GetDynamicFiltersAsync();
+    public delegate Task<DynamicFilter<T>[]> GetDynamicFiltersAsync();
     public GetDynamicFiltersAsync? DynamicFiltersGetter { get; set; } = null;
 }
 

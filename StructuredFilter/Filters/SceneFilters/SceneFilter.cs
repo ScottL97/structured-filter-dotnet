@@ -72,29 +72,38 @@ public class OperatorInfo
 public abstract class SceneFilter<T> : Filter<T>
 {
     private bool IsCacheable { get; set; } = false;
-    protected bool? CacheableOverride { get; set; }
-    private readonly IFilterResultCache<T>? _cache;
+    private IFilterResultCache<T>? _cache;
 
     protected SceneFilter(IFilterResultCache<T>? cache)
     {
+        ConfigureCache(cache);
+    }
+
+    private void ConfigureCache(IFilterResultCache<T>? cache)
+    {
         if (ConfigureIsCacheable())
         {
-            _cache = cache ?? throw new FilterException(FilterStatusCode.Invalid,
-                $"type {GetType()} Cacheable Attribute is set but IFilterCache is null", $"<{GetType()}>");
+            SetCache(cache);
         }
+    }
+
+    protected bool SetIsCacheable(bool isCacheable)
+    {
+        IsCacheable = isCacheable;
+        return IsCacheable;
+    }
+
+    protected void SetCache(IFilterResultCache<T>? cache)
+    {
+        _cache = cache ?? throw new FilterException(FilterStatusCode.Invalid,
+            $"type {GetType()} is set Cacheable but IFilterResultCache is not provided", $"<{GetType()}>");
     }
 
     private bool ConfigureIsCacheable()
     {
-        if (CacheableOverride.HasValue)
-        {
-            IsCacheable = CacheableOverride.Value;
-            return IsCacheable;
-        }
-
         if (Attribute.GetCustomAttribute(GetType(), typeof(Cacheable)) is not null)
         {
-            IsCacheable = true;
+            SetIsCacheable(true);
         }
 
         return IsCacheable;

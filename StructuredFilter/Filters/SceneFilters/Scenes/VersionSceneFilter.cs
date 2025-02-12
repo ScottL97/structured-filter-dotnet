@@ -70,11 +70,15 @@ public class DynamicVersionSceneFilter<T> : VersionSceneFilter<T>
         FilterOption<T>.GetDynamicVersionSceneFilterValueAsync dynamicSceneFilterValueGetter,
         string key,
         bool cacheable = false,
-        string? label = null) : base(filterFactory,
+        string? label = null,
+        IFilterResultCache<T>? cache = null) : base(filterFactory,
         matchTarget => dynamicSceneFilterValueGetter(matchTarget, key))
     {
         KeyOverride = key;
-        CacheableOverride = cacheable;
+        if (SetIsCacheable(cacheable))
+        {
+            SetCache(cache);
+        }
         LabelOverride = label;
     }
 }

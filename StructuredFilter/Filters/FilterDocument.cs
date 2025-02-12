@@ -24,7 +24,7 @@ public class FilterDocument<T>
         var kvCount = root.EnumerateObject().Count();
         if (kvCount != 1)
         {
-            throw new FilterException(FilterStatusCode.Invalid, $"对象键值对数需要为 1，该对象有 {kvCount} 对键值对", "<UNKNOWN>");
+            throw new FilterException(FilterStatusCode.Invalid, $"对象键值对数需要为 1，但 filter 根节点对象 {root} 有 {kvCount} 对键值对", "<UNKNOWN>");
         }
 
         foreach (var property in root.EnumerateObject())
