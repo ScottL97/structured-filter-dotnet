@@ -2,10 +2,10 @@
 
     <PropertyGroup>
         <Authors>ScottLiu</Authors>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
         <PackageId>StructuredFilter</PackageId>
         <Nullable>enable</Nullable>
-        <Version>0.0.6</Version>
+        <Version>0.0.7</Version>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
