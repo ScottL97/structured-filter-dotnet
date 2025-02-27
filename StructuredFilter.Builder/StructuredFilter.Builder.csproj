@@ -3,18 +3,13 @@
     <PropertyGroup>
         <Authors>ScottLiu</Authors>
         <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-        <PackageId>StructuredFilter.AspNetCore</PackageId>
+        <PackageId>StructuredFilter.Builder</PackageId>
         <Nullable>enable</Nullable>
-        <Version>0.0.8</Version>
+        <Version>0.0.1</Version>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
-        <PackageReference Include="StructuredFilter" Version="0.0.8" />
-    </ItemGroup>
 
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\"/>

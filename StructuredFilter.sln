@@ -14,6 +14,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredFilter.Grpc", "St
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredFilter.Test", "StructuredFilter.Test\StructuredFilter.Test.csproj", "{F6D892C0-5420-41CA-AF4A-4B720DE8A57B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredFilter.Builder", "StructuredFilter.Builder\StructuredFilter.Builder.csproj", "{4091E97C-FF84-4719-9604-E0974A5C276A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredFilter.Builder.Test", "StructuredFilter.Builder.Test\StructuredFilter.Builder.Test.csproj", "{5B85269F-FEA3-4F4B-A49F-46772E3E4EF0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +52,13 @@ Global
 		{F6D892C0-5420-41CA-AF4A-4B720DE8A57B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F6D892C0-5420-41CA-AF4A-4B720DE8A57B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F6D892C0-5420-41CA-AF4A-4B720DE8A57B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4091E97C-FF84-4719-9604-E0974A5C276A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4091E97C-FF84-4719-9604-E0974A5C276A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4091E97C-FF84-4719-9604-E0974A5C276A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4091E97C-FF84-4719-9604-E0974A5C276A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B85269F-FEA3-4F4B-A49F-46772E3E4EF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B85269F-FEA3-4F4B-A49F-46772E3E4EF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B85269F-FEA3-4F4B-A49F-46772E3E4EF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B85269F-FEA3-4F4B-A49F-46772E3E4EF0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

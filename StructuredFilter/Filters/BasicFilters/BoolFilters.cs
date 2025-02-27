@@ -13,7 +13,7 @@ public class BoolFilterFactory : IFilterFactory<bool>
     public BoolFilterFactory(IEnumerable<IBoolFilter> boolFilters)
     {
         _boolFilters = boolFilters
-            .ToDictionary(numberFilter => numberFilter.GetKey())
+            .ToDictionary(boolFilter => boolFilter.GetKey())
             .ToFrozenDictionary();
     }
 

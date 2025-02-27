@@ -1,4 +1,5 @@
 ﻿using System;
+using StructuredFilter.Filters.Common;
 
 namespace StructuredFilter.Filters.BasicFilters;
 

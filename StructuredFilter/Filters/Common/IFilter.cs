@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using StructuredFilter.Utils;
 
-namespace StructuredFilter.Filters;
+namespace StructuredFilter.Filters.Common;
 
 public interface IFilter<T>
 {

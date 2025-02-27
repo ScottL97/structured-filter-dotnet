@@ -18,11 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\StructuredFilter\StructuredFilter.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="Microsoft.AspNetCore.Mvc.Core" />
+        <ProjectReference Include="..\StructuredFilter.Builder\StructuredFilter.Builder.csproj" />
     </ItemGroup>
 
 </Project>

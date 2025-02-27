@@ -1,6 +1,8 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
+using StructuredFilter.Filters;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.Common.FilterTypes;
 using StructuredFilter.Filters.SceneFilters;
@@ -13,7 +15,7 @@ using PidFilter = StructuredFilter.Test.Scenes.PidFilter;
 
 namespace StructuredFilter.Test;
 
-public partial class StructuredFilterTests
+public class StructuredFilterTests
 {
     private static readonly Player Player1 = new()
     {
@@ -94,7 +96,7 @@ public partial class StructuredFilterTests
         Assert.That(e.Message, Does.StartWith("An item with the same key has already been added"));
     }
 
-    [GeneratedRegex(@"\s")] private static partial Regex WhitespaceRegex();
+    private static readonly Regex WhitespaceRegex = new (@"\s");
 
     [Test]
     public void GetSceneFilterInfosTest()
@@ -106,7 +108,7 @@ public partial class StructuredFilterTests
         });
 
         Console.WriteLine(sceneFilterInfos);
-        Assert.That(WhitespaceRegex().Replace(sceneFilterInfos, ""), Is.EqualTo("{\"pid\":{\"label\":\"玩家ID\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"NUMBER\"},\"userName\":{\"label\":\"用户名\",\"logics\":[{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"匹配正则表达式\",\"value\":\"$regex\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"}],\"type\":\"STRING\"},\"playerGameVersion\":{\"label\":\"玩家游戏版本\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"VERSION\"}}"));
+        Assert.That(WhitespaceRegex.Replace(sceneFilterInfos, ""), Is.EqualTo("{\"pid\":{\"label\":\"玩家ID\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"NUMBER\"},\"userName\":{\"label\":\"用户名\",\"logics\":[{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"匹配正则表达式\",\"value\":\"$regex\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"}],\"type\":\"STRING\"},\"playerGameVersion\":{\"label\":\"玩家游戏版本\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"VERSION\"}}"));
     }
 
     [Test]
@@ -114,7 +116,6 @@ public partial class StructuredFilterTests
     {
         string[] filterJsons = [
             "{\"pid\": {\"$in\": [1000, 1001]}}",
-            string.Empty,
             "{\"$and\": [{\"pid\": {\"$in\": [1000, 1001]}}, {\"userName\": {\"$eq\": \"Scott\"}}]}",
             "{\"$and\": [{\"userName\": {\"$eq\": \"Scott\"}}, {\"playerGameVersion\": {\"$le\": \"1.1.0\"}}]}",
             "{\"$and\": [{\"playerGameVersion\": {\"$lt\": \"2.0.0\"}}, {\"playerGameVersion\": {\"$gt\": \"0.9.0\"}}]}",
@@ -143,6 +144,27 @@ public partial class StructuredFilterTests
     public async Task ShouldMatchFailed()
     {
         ExceptionExpect[] expects = [
+            new ()
+            {
+                FilterJson = string.Empty,
+                StatusCode = FilterStatusCode.Invalid,
+                ErrorMessage = "Filter cannot be empty",
+                FailedKeyPath = [],
+            },
+            new ()
+            {
+                FilterJson = "test",
+                StatusCode = FilterStatusCode.Invalid,
+                ErrorMessage = "Filter 不是有效的 JSON",
+                FailedKeyPath = [],
+            },
+            new ()
+            {
+                FilterJson = "{",
+                StatusCode = FilterStatusCode.Invalid,
+                ErrorMessage = "Filter 不是有效的 JSON",
+                FailedKeyPath = [],
+            },
             new ()
             {
                 FilterJson = "{\"userName\": {\"$regex\": \"^A\"}}",
@@ -612,16 +634,16 @@ public partial class StructuredFilterTests
             WriteIndented = true
         });
 
-        Console.WriteLine(WhitespaceRegex().Replace(sceneFilterInfos, ""));
-        Assert.That(WhitespaceRegex().Replace(sceneFilterInfos, ""), Is.EqualTo("{\"pid\":{\"label\":\"玩家ID\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"NUMBER\"},\"userName\":{\"label\":\"用户名\",\"logics\":[{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"匹配正则表达式\",\"value\":\"$regex\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"}],\"type\":\"STRING\"},\"playerGameVersion\":{\"label\":\"玩家游戏版本\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"VERSION\"},\"rank\":{\"label\":\"玩家等级\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"NUMBER\"}}"));
+        Console.WriteLine(WhitespaceRegex.Replace(sceneFilterInfos, ""));
+        Assert.That(WhitespaceRegex.Replace(sceneFilterInfos, ""), Is.EqualTo("{\"pid\":{\"label\":\"玩家ID\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"NUMBER\"},\"userName\":{\"label\":\"用户名\",\"logics\":[{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"匹配正则表达式\",\"value\":\"$regex\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"}],\"type\":\"STRING\"},\"playerGameVersion\":{\"label\":\"玩家游戏版本\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"VERSION\"},\"rank\":{\"label\":\"玩家等级\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"NUMBER\"}}"));
 
         string[] filterJsons =
         [
             "{\"rank\": {\"$range\": [0, 50]}}",
-            string.Empty,
+            "{\"rank\": {\"$ne\": 100}}",
             "{\"$and\": [{\"pid\": {\"$in\": [1000, 1001]}}, {\"rank\": {\"$eq\": 10}}]}"
         ];
-        
+
         await AssertPlayer1MatchSuccessfully(filterJsons, testDynamicFilterService);
     }
 
@@ -794,6 +816,62 @@ public partial class StructuredFilterTests
                 Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(expect.FailedKeyPath));
             });
         }
+    }
+
+    [Test]
+    public void TestFilterNormalizer()
+    {
+        Assert.That(FilterNormalizer.Normalize("{\"pid\": 5000}"),
+            Is.EqualTo("{\"pid\":{\"$eq\":5000}}"));
+
+        Assert.That(FilterNormalizer.Normalize("{\"$and\":[{\"pid\": 5000},{\"name\":\"Tom\"}]}"),
+            Is.EqualTo("{\"$and\":[{\"pid\":{\"$eq\":5000}},{\"name\":{\"$eq\":\"Tom\"}}]}"));
+    }
+
+    [Test]
+    public void TestFilterValidator()
+    {
+        var filterFactory = new FilterFactory<Player>();
+        filterFactory = filterFactory.WithSceneFilter(new PidFilter(filterFactory));
+
+        FilterValidator.MustValid("{\"pid\": 5000}", filterFactory);
+        FilterValidator.MustValid("{\"pid\": {\"$ne\": 2000}}", filterFactory);
+
+        var e = Assert.Throws<FilterException>(() =>
+            FilterValidator.MustValid("", filterFactory));
+        Assert.Multiple(() =>
+        {
+            Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.Invalid));
+            Assert.That(e.Message, Does.StartWith("Filter cannot be empty"));
+            Assert.That(e.FailedKeyPath.Traverse().ToList(), Has.Count.EqualTo(0));
+        });
+
+        e = Assert.Throws<FilterException>(() =>
+            FilterValidator.MustValid("{\"pid\": \"5000\"}", filterFactory));
+        Assert.Multiple(() =>
+        {
+            Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.Invalid));
+            Assert.That(e.Message, Does.StartWith("filter 值 5000 类型为 String，期望类型为 Number"));
+            Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(new List<string> { "pid", "$eq" }));
+        });
+
+        e = Assert.Throws<FilterException>(() =>
+            FilterValidator.MustValid("{\"pid\": \"5000\"", filterFactory));
+        Assert.Multiple(() =>
+        {
+            Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.Invalid));
+            Assert.That(e.Message, Does.StartWith("Filter 不是有效的 JSON"));
+            Assert.That(e.FailedKeyPath.Traverse().ToList(), Has.Count.EqualTo(0));
+        });
+
+        e = Assert.Throws<FilterException>(() =>
+            FilterValidator.MustValid("{\"not_found\": 1}", filterFactory));
+        Assert.Multiple(() =>
+        {
+            Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.Invalid));
+            Assert.That(e.Message, Does.StartWith("FilterFactory of type StructuredFilter.Test.Models.Player 子 filter not_found 不存在"));
+            Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(new List<string> { "not_found" }));
+        });
     }
 
     private static void PrintFilterException(FilterException e)

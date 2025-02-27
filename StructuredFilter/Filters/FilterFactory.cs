@@ -132,9 +132,15 @@ public class FilterFactory<T> : IFilterFactory<T>
         {
             return _sceneFilterFactory.Get(Consts.JsonPathFilterKey);
         }
-        return _logicFilterFactory.GetAll()
-            .Concat(_sceneFilterFactory.GetAll())
-            .First(x => x.Key == key).Value;
+
+        try
+        {
+            return _logicFilterFactory.Get(key);
+        }
+        catch (FilterException)
+        {
+            return _sceneFilterFactory.Get(key);
+        }
     }
 
     public Dictionary<string, IFilter<T>> GetAll()

@@ -67,6 +67,7 @@ public class FilterService<T>(FilterOption<T>? option=null)
         return results.Where(r => r.IsMatched).Select(r => r.MatchTarget);
     }
 
+    // 返回 matchTargets 中满足 filter 的子集
     public async Task<IEnumerable<T>> LazyFilterOutAsync(string rawFilter, IEnumerable<LazyObjectGetter<T>> matchTargetsGetters)
     {
         var filteredResults = new List<T>();
@@ -85,6 +86,7 @@ public class FilterService<T>(FilterOption<T>? option=null)
 
     private static readonly FilterException OkResult = new (FilterStatusCode.Ok, "ok", "");
 
+    // 不匹配时不会抛出异常而是返回匹配结果
     public async Task<FilterException> MatchAsync(string rawFilter, T matchTarget)
     {
         try
@@ -114,13 +116,9 @@ public class FilterService<T>(FilterOption<T>? option=null)
         return OkResult;
     }
 
+    // 不匹配时抛出异常
     public async Task MustMatchAsync(string rawFilter, T matchTarget)
     {
-        if (rawFilter.Length == 0)
-        {
-            return;
-        }
-
         try
         {
             var filterDocument = GetFilterDocument(rawFilter);
@@ -148,11 +146,6 @@ public class FilterService<T>(FilterOption<T>? option=null)
     // 不匹配时抛出异常
     public async Task LazyMustMatchAsync(string rawFilter, LazyObjectGetter<T> matchTargetGetter)
     {
-        if (rawFilter.Length == 0)
-        {
-            return;
-        }
-
         try
         {
             var filterDocument = GetFilterDocument(rawFilter);
