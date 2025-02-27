@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using StructuredFilter.Filters;
@@ -28,6 +29,16 @@ public class FilterService<T>(FilterOption<T>? option=null)
     public delegate IFilter<T> SceneFilterCreator(FilterFactory<T> filterFactory);
     
     private readonly FilterOption<T> _filterOption = option ?? new FilterOption<T>();
+
+    public void MustValidFilter(string filter)
+    {
+        FilterValidator.MustValid(filter, FilterFactory);
+    }
+
+    public void MustValidFilter(JsonDocument filterDocument)
+    {
+        FilterValidator.MustValid(filterDocument, FilterFactory);
+    }
 
     public async Task<FilterService<T>> LoadDynamicSceneFilters()
     {

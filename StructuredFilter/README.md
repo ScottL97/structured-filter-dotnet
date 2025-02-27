@@ -176,11 +176,32 @@ foreach (var filteredPlayer in filteredList)
 * FilterValidator is used to verify whether a JSON string or a System.Text.Json.JsonDocument is a valid filter:
 
 ```csharp
-// Valid filters:
-FilterValidator.MustValid("{\"pid\": 5000}", filterFactory);
-FilterValidator.MustValid("{\"pid\": {\"$ne\": 2000}}", filterFactory);
-// Invalid filters:
-FilterValidator.MustValid("", filterFactory); // Treat empty string as invalid filter
-FilterValidator.MustValid("{\"pid\": \"5000\"}", filterFactory); // Wrong value type for pid filter
-FilterValidator.MustValid("{\"pid\": 5000", filterFactory); // Invalid JSON format
+try
+{
+    // Valid filters:
+    FilterValidator.MustValid("{\"pid\": 5000}", filterFactory);
+    FilterValidator.MustValid("{\"pid\": {\"$ne\": 2000}}", filterFactory);
+    // Invalid filters:
+    FilterValidator.MustValid("", filterFactory); // Treat empty string as invalid filter
+    FilterValidator.MustValid("{\"pid\": \"5000\"}", filterFactory); // Wrong value type for pid filter
+    FilterValidator.MustValid("{\"pid\": 5000", filterFactory); // Invalid JSON format
+catch (FilterException e)
+{
+    Console.WriteLine($"invalid filter: {e}");
+    throw;
+}
+```
+
+* Validate with FilterService:
+
+```csharp
+try
+{
+    _filterService.MustValidFilter("{\"pid\": 5000"); // Invalid JSON format
+}
+catch (FilterException e)
+{
+    Console.WriteLine($"invalid filter: {e}");
+    throw;
+}
 ```

@@ -835,10 +835,21 @@ public class StructuredFilterTests
         filterFactory = filterFactory.WithSceneFilter(new PidFilter(filterFactory));
 
         FilterValidator.MustValid("{\"pid\": 5000}", filterFactory);
+        _filterService.MustValidFilter("{\"pid\": 5000}");
         FilterValidator.MustValid("{\"pid\": {\"$ne\": 2000}}", filterFactory);
+        _filterService.MustValidFilter("{\"pid\": {\"$ne\": 2000}}");
 
         var e = Assert.Throws<FilterException>(() =>
             FilterValidator.MustValid("", filterFactory));
+        Assert.Multiple(() =>
+        {
+            Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.Invalid));
+            Assert.That(e.Message, Does.StartWith("Filter cannot be empty"));
+            Assert.That(e.FailedKeyPath.Traverse().ToList(), Has.Count.EqualTo(0));
+        });
+
+        e = Assert.Throws<FilterException>(() =>
+            _filterService.MustValidFilter(""));
         Assert.Multiple(() =>
         {
             Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.Invalid));
@@ -854,6 +865,15 @@ public class StructuredFilterTests
             Assert.That(e.Message, Does.StartWith("filter 值 5000 类型为 String，期望类型为 Number"));
             Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(new List<string> { "pid", "$eq" }));
         });
+        
+        e = Assert.Throws<FilterException>(() =>
+            _filterService.MustValidFilter("{\"pid\": \"5000\"}"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.Invalid));
+            Assert.That(e.Message, Does.StartWith("filter 值 5000 类型为 String，期望类型为 Number"));
+            Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(new List<string> { "pid", "$eq" }));
+        });
 
         e = Assert.Throws<FilterException>(() =>
             FilterValidator.MustValid("{\"pid\": \"5000\"", filterFactory));
@@ -863,9 +883,27 @@ public class StructuredFilterTests
             Assert.That(e.Message, Does.StartWith("Filter 不是有效的 JSON"));
             Assert.That(e.FailedKeyPath.Traverse().ToList(), Has.Count.EqualTo(0));
         });
+        
+        e = Assert.Throws<FilterException>(() =>
+            _filterService.MustValidFilter("{\"pid\": \"5000\""));
+        Assert.Multiple(() =>
+        {
+            Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.Invalid));
+            Assert.That(e.Message, Does.StartWith("Filter 不是有效的 JSON"));
+            Assert.That(e.FailedKeyPath.Traverse().ToList(), Has.Count.EqualTo(0));
+        });
 
         e = Assert.Throws<FilterException>(() =>
             FilterValidator.MustValid("{\"not_found\": 1}", filterFactory));
+        Assert.Multiple(() =>
+        {
+            Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.Invalid));
+            Assert.That(e.Message, Does.StartWith("FilterFactory of type StructuredFilter.Test.Models.Player 子 filter not_found 不存在"));
+            Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(new List<string> { "not_found" }));
+        });
+        
+        e = Assert.Throws<FilterException>(() =>
+            _filterService.MustValidFilter("{\"not_found\": 1}"));
         Assert.Multiple(() =>
         {
             Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.Invalid));
