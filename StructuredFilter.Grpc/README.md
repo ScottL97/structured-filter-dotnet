@@ -5,20 +5,14 @@
 ```csharp
 public class FilterManager : v1.FilterManager.FilterManagerBase
 {
-    public override async Task<GetFiltersResponse> GetFilters(GetFiltersRequest request, ServerCallContext context)
+    public override Task<GetFiltersResponse> GetFilters(EmptyRequest request, ServerCallContext context)
     {
-        return request.ServiceType switch
-        {
-            "PlayerService" => new GetFiltersResponse
-            {
-                FilterInfo = JsonSerializer.Serialize(playerFilterService.GetSceneFilterInfos())
-            },
-            "TeamService" => new GetFiltersResponse
-            {
-                FilterInfo = JsonSerializer.Serialize(teamFilterService.GetSceneFilterInfos())
-            },
-            _ => throw new RpcException(new Status(StatusCode.InvalidArgument, "wrong service type"))
-        };
+        var resp = new GetFiltersResponse();
+        // The key is the filter target, and the value is the JSON serialized string of the filter metadata dictionary
+        resp.FilterInfos.Add("Players", JsonSerializer.Serialize(playerFilterService.GetSceneFilterInfos()));
+        resp.FilterInfos.Add("Teams", JsonSerializer.Serialize(teamFilterService.GetSceneFilterInfos()));
+
+        return Task.FromResult(resp);
     }
 }
 ```

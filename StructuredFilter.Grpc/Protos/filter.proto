@@ -5,16 +5,16 @@ option csharp_namespace = "StructuredFilter.v1";
 package filter.v1;
 
 service FilterManager {
-  rpc GetFilters(GetFiltersRequest) returns (GetFiltersResponse);
+  rpc GetFilters(EmptyRequest) returns (GetFiltersResponse);
 }
 
-message GetFiltersRequest {
-  string service_type = 1;
+message EmptyRequest {
 }
 
 message GetFiltersResponse {
   // example: 
   // {
+  // "Players": {
   // "pid": {
   //    "label": "玩家 ID",
   //    "logics": [
@@ -118,5 +118,7 @@ message GetFiltersResponse {
   //    "type": "VERSION"
   //  }
   //}
-  string filter_info = 1;
+  //}
+  // The key is the filter target, and the value is the JSON serialized string of the filter metadata dictionary
+  map<string, string> filter_infos = 1;
 }

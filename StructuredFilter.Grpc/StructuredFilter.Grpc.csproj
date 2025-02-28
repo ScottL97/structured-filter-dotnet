@@ -4,7 +4,7 @@
         <Authors>ScottLiu</Authors>
         <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
         <Nullable>enable</Nullable>
-        <Version>0.0.3</Version>
+        <Version>0.0.4</Version>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>StructuredFilter.Grpc</PackageId>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
