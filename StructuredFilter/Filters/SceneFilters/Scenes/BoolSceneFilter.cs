@@ -11,50 +11,40 @@ public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSce
 {
     protected delegate Task<bool> BoolValueGetter(T? matchTarget);
 
-    public override void Valid(JsonElement filterElement)
+    public override FilterException? Valid(JsonElement filterElement)
     {
-        try
+        var checkResult = filterElement.AssertIsValidObject(this, property =>
         {
-            filterElement.AssertIsValidObject(this, property =>
-            {
-                var filter = filterFactory.BoolFilterFactory.Get(property.Name);
-                filter.Valid(property.Value);
-            });
-        }
-        catch (FilterException e)
-        {
-            throw e.PrependFailedKey(GetKey());
-        }
+            var (filter, getResult) = filterFactory.BoolFilterFactory.Get(property.Name);
+            return getResult ?? filter.Valid(property.Value);
+        });
+        return checkResult?.PrependFailedKey(GetKey());
     }
 
-    protected override async Task LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
+    protected override async Task<FilterException?> LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
     {
-        try
+        var (filter, getResult) = filterFactory.BoolFilterFactory.Get(filterKv.Key);
+        if (getResult is not null)
         {
-            var filter = filterFactory.BoolFilterFactory.Get(filterKv.Key);
-            await filter.LazyMatchAsync(filterKv.Value, new LazyObjectGetter<bool>(async _ =>
-            {
-                var matchTarget = await matchTargetGetter.GetAsync();
-                return (await boolValueGetter(matchTarget), true);
-            }, matchTargetGetter.Args));
+            return getResult.PrependFailedKey(GetKey());
         }
-        catch (FilterException e)
+        var filterResult = await filter.LazyMatchAsync(filterKv.Value, new LazyObjectGetter<bool>(async _ =>
         {
-            throw e.PrependFailedKey(GetKey());
-        }
+            var matchTarget = await matchTargetGetter.GetAsync();
+            return (await boolValueGetter(matchTarget), true);
+        }, matchTargetGetter.Args));
+        return filterResult?.PrependFailedKey(GetKey());
     }
 
-    protected override async Task MatchInternalAsync(FilterKv filterKv, T matchTarget)
+    protected override async Task<FilterException?> MatchInternalAsync(FilterKv filterKv, T matchTarget)
     {
-        try
+        var (filter, getResult) = filterFactory.BoolFilterFactory.Get(filterKv.Key);
+        if (getResult is not null)
         {
-            var filter = filterFactory.BoolFilterFactory.Get(filterKv.Key);
-            await filter.MatchAsync(filterKv.Value, await boolValueGetter(matchTarget));
+            return getResult.PrependFailedKey(GetKey());
         }
-        catch (FilterException e)
-        {
-            throw e.PrependFailedKey(GetKey());
-        }
+        var filterResult = await filter.MatchAsync(filterKv.Value, await boolValueGetter(matchTarget));
+        return filterResult?.PrependFailedKey(GetKey());
     }
 }
 

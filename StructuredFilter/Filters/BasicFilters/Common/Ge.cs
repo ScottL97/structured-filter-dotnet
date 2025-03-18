@@ -10,37 +10,36 @@ namespace StructuredFilter.Filters.BasicFilters.Common;
 [FilterKey("$ge")]
 internal class GeFilter<T>: Filter<T>, IBasicFilter<T>
 {
-    public override void Valid(JsonElement element)
+    public FilterException? Valid(JsonElement element)
     {
-        element.AssertIsRightElementType(this);
+        return element.AssertIsRightElementType(this);
     }
 
-    public async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
+    public async Task<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {
             var matchTarget = await matchTargetGetter.GetAsync();
             if (element.MatchGe(this, matchTarget))
             {
-                return;
+                return null;
             }
 
-            this.ThrowNotMatchException(matchTarget, element.ToString());
+            return this.CreateNotMatchException(matchTarget, element.ToString());
         }
         catch (LazyObjectGetException)
         {
-            this.ThrowMatchTargetGetFailedException(matchTargetGetter.Args);
+            return this.CreateMatchTargetGetFailedException(matchTargetGetter.Args);
         }
     }
 
-    public Task MatchAsync(JsonElement element, T matchTarget)
+    public Task<FilterException?> MatchAsync(JsonElement element, T matchTarget)
     {
         if (element.MatchGe(this, matchTarget))
         {
-            return Task.CompletedTask;
+            return Task.FromResult<FilterException?>(null);
         }
 
-        this.ThrowNotMatchException(matchTarget, element.ToString());
-        return Task.CompletedTask;
+        return Task.FromResult(this.CreateNotMatchException(matchTarget, element.ToString()));
     }
 }

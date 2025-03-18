@@ -17,15 +17,14 @@ public class BoolFilterFactory : IBasicFilterFactory<bool>
             .ToFrozenDictionary();
     }
 
-    public IBasicFilter<bool> Get(string key)
+    public (IBasicFilter<bool>, FilterException?) Get(string key)
     {
         if (_boolFilters.TryGetValue(key, out var boolFilter))
         {
-            return boolFilter;
+            return (boolFilter, null);
         }
 
-        this.ThrowSubFilterNotFoundException(key);
-        return null;
+        return (null, this.CreateSubFilterNotFoundException(key));
     }
 
     public Dictionary<string, IFilter<bool>> GetAll()

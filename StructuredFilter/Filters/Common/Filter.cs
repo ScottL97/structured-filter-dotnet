@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text.Json;
 
 namespace StructuredFilter.Filters.Common;
 
@@ -49,6 +48,4 @@ public abstract class Filter<T>
         }
         return typeAttribute.Type;
     }
-
-    public abstract void Valid(JsonElement element);
 }

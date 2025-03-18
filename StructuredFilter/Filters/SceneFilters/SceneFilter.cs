@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using StructuredFilter.Filters.Common;
@@ -22,15 +23,14 @@ public class SceneFilterFactory<T> : ISceneFilterFactory<T>
         }
     }
 
-    public ISceneFilter<T> Get(string key)
+    public (ISceneFilter<T>, FilterException?) Get(string key)
     {
         if (_sceneFilters.TryGetValue(key, out var sceneFilter))
         {
-            return sceneFilter;
+            return (sceneFilter, null);
         }
 
-        this.ThrowSubFilterNotFoundException(key);
-        return null;
+        return (null, this.CreateSubFilterNotFoundException(key));
     }
 
     public Dictionary<string, IFilter<T>> GetAll()
@@ -105,7 +105,7 @@ public abstract class SceneFilter<T> : Filter<T>, ISceneFilter<T>
         return IsCacheable;
     }
 
-    public async Task LazyMatchAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
+    public async Task<FilterException?> LazyMatchAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {
@@ -117,40 +117,38 @@ public abstract class SceneFilter<T> : Filter<T>, ISceneFilter<T>
                 {
                     if (isMatched)
                     {
-                        return;
+                        return null;
                     }
 
-                    this.ThrowCacheNotMatchException(matchTarget, filterKv.ToString());
+                    return this.CreateCacheNotMatchException(matchTarget, filterKv.ToString());
                 }
             }
 
             // there is no matching result in the cache, normal matching
-            try
+            var filterResult = await LazyMatchInternalAsync(filterKv, matchTargetGetter);
+            if (IsCacheable)
             {
-                await LazyMatchInternalAsync(filterKv, matchTargetGetter);
-                if (IsCacheable)
+                if (filterResult is null)
                 {
                     var matchTarget = await matchTargetGetter.GetAsync();
                     await _cache!.SetFilterResultCacheAsync(matchTarget, filterKv, true);
                 }
-            }
-            catch (FilterException e) when (e.StatusCode == FilterStatusCode.NotMatched)
-            {
-                if (IsCacheable)
+                else if (filterResult.StatusCode == FilterStatusCode.NotMatched)
                 {
                     var matchTarget = await matchTargetGetter.GetAsync();
                     await _cache!.SetFilterResultCacheAsync(matchTarget, filterKv, false);
                 }
-                throw;
             }
+
+            return filterResult;
         }
         catch (LazyObjectGetException)
         {
-            this.ThrowMatchTargetGetFailedException(matchTargetGetter.Args);
+            return this.CreateMatchTargetGetFailedException(matchTargetGetter.Args);
         }
     }
 
-    public async Task MatchAsync(FilterKv filterKv, T matchTarget)
+    public async Task<FilterException?> MatchAsync(FilterKv filterKv, T matchTarget)
     {
         if (IsCacheable)
         {
@@ -159,32 +157,31 @@ public abstract class SceneFilter<T> : Filter<T>, ISceneFilter<T>
             {
                 if (isMatched)
                 {
-                    return;
+                    return null;
                 }
 
-                this.ThrowCacheNotMatchException(matchTarget, filterKv.ToString());
+                return this.CreateCacheNotMatchException(matchTarget, filterKv.ToString());
             }
         }
 
         // there is no matching result in the cache, normal matching
-        try
+        var filterResult = await MatchInternalAsync(filterKv, matchTarget);
+        if (IsCacheable)
         {
-            await MatchInternalAsync(filterKv, matchTarget);
-            if (IsCacheable)
+            if (filterResult is null)
             {
                 await _cache!.SetFilterResultCacheAsync(matchTarget, filterKv, true);
             }
-        }
-        catch (FilterException e) when (e.StatusCode == FilterStatusCode.NotMatched)
-        {
-            if (IsCacheable)
+            else if (filterResult.StatusCode == FilterStatusCode.NotMatched)
             {
                 await _cache!.SetFilterResultCacheAsync(matchTarget, filterKv, false);
             }
-            throw;
         }
+
+        return filterResult;
     }
 
-    protected abstract Task LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter);
-    protected abstract Task MatchInternalAsync(FilterKv filterKv, T matchTarget);
+    protected abstract Task<FilterException?> LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter);
+    protected abstract Task<FilterException?> MatchInternalAsync(FilterKv filterKv, T matchTarget);
+    public abstract FilterException? Valid(JsonElement element);
 }

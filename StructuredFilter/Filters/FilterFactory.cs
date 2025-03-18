@@ -17,23 +17,23 @@ public interface IFilterFactory<T>
 
 public interface IRootFilterFactory<T> : IFilterFactory<T>
 {
-    ISceneFilter<T> GetSceneFilter(string key);
-    ILogicFilter<T> GetLogicFilter(string key);
+    (ISceneFilter<T>, FilterException?) GetSceneFilter(string key);
+    (ILogicFilter<T>, FilterException?) GetLogicFilter(string key);
 }
 
 public interface ILogicFilterFactory<T> : IFilterFactory<T>
 {
-    ILogicFilter<T> Get(string key);
+    (ILogicFilter<T>, FilterException?) Get(string key);
 }
 
 public interface ISceneFilterFactory<T> : IFilterFactory<T>
 {
-    ISceneFilter<T> Get(string key);
+    (ISceneFilter<T>, FilterException?) Get(string key);
 }
 
 public interface IBasicFilterFactory<T> : IFilterFactory<T>
 {
-    IBasicFilter<T> Get(string key);
+    (IBasicFilter<T>, FilterException?) Get(string key);
 }
 
 public class FilterFactory<T> : IRootFilterFactory<T>
@@ -146,12 +146,12 @@ public class FilterFactory<T> : IRootFilterFactory<T>
         return this;
     }
 
-    public ISceneFilter<T> GetSceneFilter(string key)
+    public (ISceneFilter<T>, FilterException?) GetSceneFilter(string key)
     {
         return _sceneFilterFactory.Get(key);
     }
 
-    public ILogicFilter<T> GetLogicFilter(string key)
+    public (ILogicFilter<T>, FilterException?) GetLogicFilter(string key)
     {
         return _logicFilterFactory.Get(key);
     }

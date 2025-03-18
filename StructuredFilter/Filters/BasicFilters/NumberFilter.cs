@@ -17,15 +17,14 @@ public class NumberFilterFactory : IBasicFilterFactory<double>
             .ToFrozenDictionary();
     }
 
-    public IBasicFilter<double> Get(string key)
+    public (IBasicFilter<double>, FilterException?) Get(string key)
     {
         if (_numberFilters.TryGetValue(key, out var numberFilter))
         {
-            return numberFilter;
+            return (numberFilter, null);
         }
 
-        this.ThrowSubFilterNotFoundException(key);
-        return null;
+        return (null, this.CreateSubFilterNotFoundException(key));
     }
 
     public Dictionary<string, IFilter<double>> GetAll()

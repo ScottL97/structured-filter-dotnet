@@ -7,11 +7,6 @@ public readonly record struct FilterDocument<T>
 
     public FilterDocument(string rawFilter, FilterFactory<T> filterFactory)
     {
-        if (string.IsNullOrWhiteSpace(rawFilter))
-        {
-            throw new FilterException(FilterStatusCode.Invalid, "Filter cannot be empty");
-        }
-
         RawFilter = FilterNormalizer.Normalize(rawFilter);
         Tree = FilterTree.Parse(RawFilter, filterFactory);
     }

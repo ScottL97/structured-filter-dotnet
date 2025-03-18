@@ -11,37 +11,36 @@ namespace StructuredFilter.Filters.BasicFilters.Common;
 [FilterKey("$in")]
 internal class InFilter<T>: Filter<T>, IBasicFilter<T>
 {
-    public override void Valid(JsonElement element)
+    public FilterException? Valid(JsonElement element)
     {
-        element.AssertIsValidArray(this);
+        return element.AssertIsValidArray(this);
     }
 
-    public async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
+    public async Task<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {
             var matchTarget = await matchTargetGetter.GetAsync();
             if (element.EnumerateArray().Any(e => e.MatchEq(this, matchTarget)))
             {
-                return;
+                return null;
             }
 
-            this.ThrowNotMatchException(matchTarget, element.ToString());
+            return this.CreateNotMatchException(matchTarget, element.ToString());
         }
         catch (LazyObjectGetException)
         {
-            this.ThrowMatchTargetGetFailedException(matchTargetGetter.Args);
+            return this.CreateMatchTargetGetFailedException(matchTargetGetter.Args);
         }
     }
 
-    public Task MatchAsync(JsonElement element, T matchTarget)
+    public Task<FilterException?> MatchAsync(JsonElement element, T matchTarget)
     {
         if (element.EnumerateArray().Any(e => e.MatchEq(this, matchTarget)))
         {
-            return Task.CompletedTask;
+            return Task.FromResult<FilterException?>(null);
         }
 
-        this.ThrowNotMatchException(matchTarget, element.ToString());
-        return Task.CompletedTask;
+        return Task.FromResult(this.CreateNotMatchException(matchTarget, element.ToString()));
     }
 }

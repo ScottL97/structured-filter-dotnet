@@ -98,7 +98,6 @@ public class StructuredFilterTests
     [Test]
     public void GetSceneFilterInfosTest()
     {
-        Console.WriteLine("");
         var sceneFilterInfos = JsonSerializer.Serialize(_filterService.GetSceneFilterInfos(), new JsonSerializerOptions
         {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,

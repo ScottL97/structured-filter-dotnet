@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -80,100 +79,119 @@ public class FilterService<T>(FilterOption<T>? option=null)
         return filteredResults;
     }
 
-    private static readonly FilterException OkResult = new (FilterStatusCode.Ok, "ok", "");
+    private static readonly FilterException RawFilterStringEmptyException = new (FilterStatusCode.Invalid,
+        "Filter cannot be empty");
+    private static readonly FilterException WrongFilterRootTypeException = new (FilterStatusCode.Invalid,
+        "filter root is neither a logic filter nor a scene filter");
 
     // 不匹配时不会抛出异常而是返回匹配结果
     public async Task<FilterException> MatchAsync(string rawFilter, T matchTarget)
     {
+        if (string.IsNullOrWhiteSpace(rawFilter))
+        {
+            return RawFilterStringEmptyException;
+        }
+
+        FilterDocument<T> filterDocument;
         try
         {
-            await MustMatchAsync(rawFilter, matchTarget);
+            filterDocument = GetFilterDocument(rawFilter);
         }
         catch (FilterException e)
         {
             return e;
         }
 
-        return OkResult;
+        if (filterDocument.IsRootLogicFilter())
+        {
+            var (filter, getResult) = FilterFactory.GetLogicFilter(filterDocument.GetRootKey());
+            if (getResult is not null)
+            {
+                return getResult;
+            }
+            var filterResult = await filter.MatchAsync(filterDocument.GetRootFilterArray(), matchTarget);
+            return filterResult ?? FilterException.Ok;
+        }
+
+        if (filterDocument.IsRootSceneFilter())
+        {
+            var (filter, getResult) = FilterFactory.GetSceneFilter(filterDocument.GetRootKey());
+            if (getResult is not null)
+            {
+                return getResult;
+            }
+            var filterResult = await filter.MatchAsync(filterDocument.GetRootFilterKv(), matchTarget);
+            return filterResult ?? FilterException.Ok;
+        }
+
+        return WrongFilterRootTypeException;
     }
 
     // 不匹配时不会抛出异常而是返回匹配结果
     public async Task<FilterException> LazyMatchAsync(string rawFilter, LazyObjectGetter<T> matchTargetGetter)
     {
+        if (string.IsNullOrWhiteSpace(rawFilter))
+        {
+            return RawFilterStringEmptyException;
+        }
+
+        FilterDocument<T> filterDocument;
         try
         {
-            await LazyMustMatchAsync(rawFilter, matchTargetGetter);
+            filterDocument = GetFilterDocument(rawFilter);
         }
         catch (FilterException e)
         {
             return e;
         }
 
-        return OkResult;
+        if (filterDocument.IsRootLogicFilter())
+        {
+            var (filter, getResult) = FilterFactory.GetLogicFilter(filterDocument.GetRootKey());
+            if (getResult is not null)
+            {
+                return getResult;
+            }
+            var filterResult = await filter.LazyMatchAsync(filterDocument.GetRootFilterArray(), matchTargetGetter);
+            return filterResult ?? FilterException.Ok;
+        }
+
+        if (filterDocument.IsRootSceneFilter())
+        {
+            var (filter, getResult) = FilterFactory.GetSceneFilter(filterDocument.GetRootKey());
+            if (getResult is not null)
+            {
+                return getResult;
+            }
+            var filterResult = await filter.LazyMatchAsync(filterDocument.GetRootFilterKv(), matchTargetGetter);
+            return filterResult ?? FilterException.Ok;
+        }
+
+        return WrongFilterRootTypeException;
     }
 
     // 不匹配时抛出异常
     public async Task MustMatchAsync(string rawFilter, T matchTarget)
     {
-        try
+        var filterResult = await MatchAsync(rawFilter, matchTarget);
+        if (filterResult.StatusCode == FilterStatusCode.Ok)
         {
-            var filterDocument = GetFilterDocument(rawFilter);
+            return;
+        }
 
-            if (filterDocument.IsRootLogicFilter())
-            {
-                var filter = FilterFactory.GetLogicFilter(filterDocument.GetRootKey());
-                await filter.MatchAsync(filterDocument.GetRootFilterArray(), matchTarget);
-            }
-            else if (filterDocument.IsRootSceneFilter())
-            {
-                var filter = FilterFactory.GetSceneFilter(filterDocument.GetRootKey());
-                await filter.MatchAsync(filterDocument.GetRootFilterKv(), matchTarget);
-            }
-            else
-            {
-                throw new FilterException(FilterStatusCode.Invalid, "filter root is neither a logic filter nor a scene filter");
-            }
-        }
-        catch (FilterException)
-        {
-            throw;
-        }
-        catch (Exception e)
-        {
-            throw new FilterException(FilterStatusCode.MatchError, e.Message, "<UNKNOWN>");
-        }
+        throw filterResult;
     }
 
     // 不匹配时抛出异常
     public async Task LazyMustMatchAsync(string rawFilter, LazyObjectGetter<T> matchTargetGetter)
     {
-        try
+        var filterResult = await LazyMatchAsync(rawFilter, matchTargetGetter);
+        if (filterResult.StatusCode == FilterStatusCode.Ok)
         {
-            var filterDocument = GetFilterDocument(rawFilter);
+            return;
+        }
 
-            if (filterDocument.IsRootLogicFilter())
-            {
-                var filter = FilterFactory.GetLogicFilter(filterDocument.GetRootKey());
-                await filter.LazyMatchAsync(filterDocument.GetRootFilterArray(), matchTargetGetter);
-            }
-            else if (filterDocument.IsRootSceneFilter())
-            {
-                var filter = FilterFactory.GetSceneFilter(filterDocument.GetRootKey());
-                await filter.LazyMatchAsync(filterDocument.GetRootFilterKv(), matchTargetGetter);
-            }
-            else
-            {
-                throw new FilterException(FilterStatusCode.Invalid, "filter root is neither a logic filter nor a scene filter");
-            }
-        }
-        catch (FilterException)
-        {
-            throw;
-        }
-        catch (Exception e)
-        {
-            throw new FilterException(FilterStatusCode.MatchError, e.Message, "<UNKNOWN>");
-        }
+        throw filterResult;
     }
 
     private FilterDocument<T> GetFilterDocument(string rawFilter)

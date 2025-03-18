@@ -35,13 +35,29 @@ public class FilterTree
         var rootObject = root.EnumerateObject().First();
         if (rootObject.Value.ValueKind == JsonValueKind.Array)
         {
-            var filter = filterFactory.GetLogicFilter(rootObject.Name);
-            filter.Valid(rootObject.Value);
+            var (filter, getResult) = filterFactory.GetLogicFilter(rootObject.Name);
+            if (getResult is not null)
+            {
+                throw getResult;
+            }
+            var checkResult = filter.Valid(rootObject.Value);
+            if (checkResult is not null)
+            {
+                throw checkResult;
+            }
         }
         else
         {
-            var filter = filterFactory.GetSceneFilter(rootObject.Name);
-            filter.Valid(rootObject.Value);
+            var (filter, getResult) = filterFactory.GetSceneFilter(rootObject.Name);
+            if (getResult is not null)
+            {
+                throw getResult;
+            }
+            var checkResult = filter.Valid(rootObject.Value);
+            if (checkResult is not null)
+            {
+                throw checkResult;
+            }
         }
 
         var filterTree = new FilterTree();

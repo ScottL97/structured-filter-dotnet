@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Threading.Tasks;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.Common.FilterTypes;
@@ -12,15 +11,16 @@ public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, Strin
 {
     protected delegate Task<string> StringValueGetter(T? matchTarget);
 
-    public override void Valid(JsonElement filterElement)
+    public override FilterException? Valid(JsonElement filterElement)
     {
         try
         {
-            filterElement.AssertIsValidObject(this, property =>
+            var checkResult = filterElement.AssertIsValidObject(this, property =>
             {
-                var filter = filterFactory.StringFilterFactory.Get(property.Name);
-                filter.Valid(property.Value);
+                var (filter, getResult) = filterFactory.StringFilterFactory.Get(property.Name);
+                return getResult ?? filter.Valid(property.Value);
             });
+            return checkResult?.PrependFailedKey(GetKey());
         }
         catch (FilterException e)
         {
@@ -28,34 +28,30 @@ public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, Strin
         }
     }
 
-    protected override async Task LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
+    protected override async Task<FilterException?> LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
     {
-        try
+        var (filter, getResult) = filterFactory.StringFilterFactory.Get(filterKv.Key);
+        if (getResult is not null)
         {
-            var filter = filterFactory.StringFilterFactory.Get(filterKv.Key);
-            await filter.LazyMatchAsync(filterKv.Value, new LazyObjectGetter<string>(async _ =>
-            {
-                var matchTarget = await matchTargetGetter.GetAsync();
-                return (await stringValueGetter(matchTarget), true);
-            }, matchTargetGetter.Args));
+            return getResult.PrependFailedKey(GetKey());
         }
-        catch (FilterException e)
+        var filterResult = await filter.LazyMatchAsync(filterKv.Value, new LazyObjectGetter<string>(async _ =>
         {
-            throw e.PrependFailedKey(GetKey());
-        }
+            var matchTarget = await matchTargetGetter.GetAsync();
+            return (await stringValueGetter(matchTarget), true);
+        }, matchTargetGetter.Args));
+        return filterResult?.PrependFailedKey(GetKey());
     }
 
-    protected override async Task MatchInternalAsync(FilterKv filterKv, T matchTarget)
+    protected override async Task<FilterException?> MatchInternalAsync(FilterKv filterKv, T matchTarget)
     {
-        try
+        var (filter, getResult) = filterFactory.StringFilterFactory.Get(filterKv.Key);
+        if (getResult is not null)
         {
-            var filter = filterFactory.StringFilterFactory.Get(filterKv.Key);
-            await filter.MatchAsync(filterKv.Value, await stringValueGetter(matchTarget));
+            return getResult.PrependFailedKey(GetKey());
         }
-        catch (FilterException e)
-        {
-            throw e.PrependFailedKey(GetKey());
-        }
+        var filterResult = await filter.MatchAsync(filterKv.Value, await stringValueGetter(matchTarget));
+        return filterResult?.PrependFailedKey(GetKey());
     }
 }
 

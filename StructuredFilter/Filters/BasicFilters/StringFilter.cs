@@ -22,15 +22,14 @@ public class StringFilterFactory : IBasicFilterFactory<string>
             .ToFrozenDictionary();
     }
 
-    public IBasicFilter<string> Get(string key)
+    public (IBasicFilter<string>, FilterException?) Get(string key)
     {
         if (_stringFilters.TryGetValue(key, out var stringFilter))
         {
-            return stringFilter;
+            return (stringFilter, null);
         }
 
-        this.ThrowSubFilterNotFoundException(key);
-        return null;
+        return (null, this.CreateSubFilterNotFoundException(key));
     }
 
     public Dictionary<string, IFilter<string>> GetAll()
@@ -51,37 +50,36 @@ internal class StringRangeFilter : RangeFilter<string>, IStringFilter;
 [FilterKey("$regex")]
 internal class StringRegexFilter : Filter<string>, IStringFilter
 {
-    public override void Valid(JsonElement element)
+    public FilterException? Valid(JsonElement element)
     {
-        element.AssertIsValidRegex(this);
+        return element.AssertIsValidRegex(this);
     }
 
-    public async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<string> matchTargetGetter)
+    public async Task<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<string> matchTargetGetter)
     {
         try
         {
             var matchTarget = await matchTargetGetter.GetAsync();
             if (Regex.IsMatch(matchTarget, element.GetString()!, RegexOptions.None))
             {
-                return;
+                return null;
             }
 
-            this.ThrowNotMatchException(matchTarget, element.ToString());
+            return this.CreateNotMatchException(matchTarget, element.ToString());
         }
         catch (LazyObjectGetException)
         {
-            this.ThrowMatchTargetGetFailedException(matchTargetGetter.Args);
+            return this.CreateMatchTargetGetFailedException(matchTargetGetter.Args);
         }
     }
 
-    public Task MatchAsync(JsonElement element, string matchTarget)
+    public Task<FilterException?> MatchAsync(JsonElement element, string matchTarget)
     {
         if (Regex.IsMatch(matchTarget, element.GetString()!, RegexOptions.None))
         {
-            return Task.CompletedTask;
+            return Task.FromResult<FilterException?>(null);
         }
 
-        this.ThrowNotMatchException(matchTarget, element.ToString());
-        return Task.CompletedTask;
+        return Task.FromResult(this.CreateNotMatchException(matchTarget, element.ToString()));
     }
 }

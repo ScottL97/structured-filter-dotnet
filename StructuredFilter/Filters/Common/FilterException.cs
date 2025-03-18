@@ -16,6 +16,7 @@ public enum FilterStatusCode
 
 public class FilterException: Exception
 {
+    public static readonly FilterException Ok = new (FilterStatusCode.Ok, string.Empty);
     public Exception? InnerException { get; set; }
     public FilterStatusCode StatusCode { get; set; }
     public string Message { get; set; }
@@ -59,45 +60,45 @@ public class FilterException: Exception
 
 public static class FilterExceptionExtensions
 {
-    public static void ThrowMatchTargetGetFailedException<T>(this IFilter<T> filter, Dictionary<string, object>? args)
+    public static FilterException CreateMatchTargetGetFailedException<T>(this IFilter<T> filter, Dictionary<string, object>? args)
     {
-        throw new FilterException(FilterStatusCode.MatchError, $"matchTarget of type {typeof(T)} get failed, args: {JsonSerializer.Serialize(args)}", filter.GetKey());
+        return new FilterException(FilterStatusCode.MatchError, $"matchTarget of type {typeof(T)} get failed, args: {JsonSerializer.Serialize(args)}", filter.GetKey());
     }
 
-    public static void ThrowNotMatchException<T>(this IBasicFilter<T> filter, T matchTarget, string filterValue)
+    public static FilterException CreateNotMatchException<T>(this IBasicFilter<T> filter, T matchTarget, string filterValue)
     {
-        throw new FilterException(FilterStatusCode.NotMatched, $"matchTarget {matchTarget} of type {typeof(T)} not match {{{filter.GetKey()}: {filterValue}}}", filter.GetKey());
-    }
-    
-    public static void ThrowCacheNotMatchException<T>(this IFilter<T> filter, T matchTarget, string filterValue)
-    {
-        throw new FilterException(FilterStatusCode.NotMatched, $"matchTarget {matchTarget} of type {typeof(T)} not match {{{filter.GetKey()}: {filterValue}}} according to cache", filter.GetKey());
+        return new FilterException(FilterStatusCode.NotMatched, $"matchTarget {matchTarget} of type {typeof(T)} not match {{{filter.GetKey()}: {filterValue}}}", filter.GetKey());
     }
 
-    public static void ThrowWrongFilterValueTypeException<T>(this IFilter<T> filter, JsonElement element, JsonValueKind expectedType)
+    public static FilterException CreateCacheNotMatchException<T>(this IFilter<T> filter, T matchTarget, string filterValue)
     {
-        throw new FilterException(FilterStatusCode.Invalid,
+        return new FilterException(FilterStatusCode.NotMatched, $"matchTarget {matchTarget} of type {typeof(T)} not match {{{filter.GetKey()}: {filterValue}}} according to cache", filter.GetKey());
+    }
+
+    public static FilterException CreateWrongFilterValueTypeException<T>(this IFilter<T> filter, JsonElement element, JsonValueKind expectedType)
+    {
+        return new FilterException(FilterStatusCode.Invalid,
             $"{typeof(IFilter<T>)} value type is {element.ValueKind}, not expected {expectedType}", filter.GetKey());
     }
 
-    public static void ThrowSubFilterNotFoundException<T>(this IFilterFactory<T> filterFactory, string filterKey)
+    public static FilterException CreateSubFilterNotFoundException<T>(this IFilterFactory<T> filterFactory, string filterKey)
     {
-        throw new FilterException(FilterStatusCode.Invalid, $"FilterFactory of type {typeof(T)} 子 filter {filterKey} 不存在", filterKey);
+        return new FilterException(FilterStatusCode.Invalid, $"FilterFactory of type {typeof(T)} 子 filter {filterKey} 不存在", filterKey);
     }
 
-    public static void ThrowFilterValueTypeMismatchException<T>(this IFilter<T> filter, JsonElement element, JsonValueKind expectedType, bool prependFailedKey=true)
+    public static FilterException CreateFilterValueTypeMismatchException<T>(this IFilter<T> filter, JsonElement element, JsonValueKind expectedType, bool prependFailedKey=true)
     {
         var e = new FilterException(FilterStatusCode.Invalid, $"filter 值 {element} 类型为 {element.ValueKind}，期望类型为 {expectedType.ToString()}");
         if (prependFailedKey)
         {
-            throw e.PrependFailedKey(filter.GetKey());
+            return e.PrependFailedKey(filter.GetKey());
         }
 
-        throw e;
+        return e;
     }
 
-    public static void ThrowFilterValueTypeMismatchException<T>(this IFilter<T> filter, JsonElement element, JsonValueKind[] expectedTypes)
+    public static FilterException CreateFilterValueTypeMismatchException<T>(this IFilter<T> filter, JsonElement element, JsonValueKind[] expectedTypes)
     {
-        throw new FilterException(FilterStatusCode.Invalid, $"filter 值 {element} 类型为 {element.ValueKind}，期望类型为 {string.Join('/', expectedTypes)}", filter.GetKey());
+        return new FilterException(FilterStatusCode.Invalid, $"filter 值 {element} 类型为 {element.ValueKind}，期望类型为 {string.Join('/', expectedTypes)}", filter.GetKey());
     }
 }

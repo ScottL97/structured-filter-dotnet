@@ -18,15 +18,14 @@ public class VersionFilterFactory : IBasicFilterFactory<Version>
             .ToFrozenDictionary();
     }
 
-    public IBasicFilter<Version> Get(string key)
+    public (IBasicFilter<Version>, FilterException?) Get(string key)
     {
         if (_versionFilters.TryGetValue(key, out var versionFilter))
         {
-            return versionFilter;
+            return (versionFilter, null);
         }
 
-        this.ThrowSubFilterNotFoundException(key);
-        return null;
+        return (null, this.CreateSubFilterNotFoundException(key));
     }
 
     public Dictionary<string, IFilter<Version>> GetAll()

@@ -10,37 +10,58 @@ namespace StructuredFilter.Filters.BasicFilters.Common;
 [FilterKey("$range")]
 internal class RangeFilter<T>: Filter<T>, IBasicFilter<T>
 {
-    public override void Valid(JsonElement element)
+    public FilterException? Valid(JsonElement element)
     {
-        element.AssertIsValidRange(this);
+        return element.AssertIsValidRange(this);
     }
 
-    public async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
+    public async Task<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {
             var matchTarget = await matchTargetGetter.GetAsync();
-            if (element[1].CompareTo(this, matchTarget) >= 0 && element[0].CompareTo(this, matchTarget) <= 0)
+            var (rightCompareResult, checkResult1) = element[1].CompareTo(this, matchTarget);
+            if (checkResult1 is not null)
             {
-                return;
+                return checkResult1;
+            }
+            var (leftCompareResult, checkResult2) = element[0].CompareTo(this, matchTarget);
+            if (checkResult2 is not null)
+            {
+                return checkResult2;
             }
 
-            this.ThrowNotMatchException(matchTarget, element.ToString());
+            if (rightCompareResult >= 0 && leftCompareResult <= 0)
+            {
+                return null;
+            }
+
+            return this.CreateNotMatchException(matchTarget, element.ToString());
         }
         catch (LazyObjectGetException)
         {
-            this.ThrowMatchTargetGetFailedException(matchTargetGetter.Args);
+            return this.CreateMatchTargetGetFailedException(matchTargetGetter.Args);
         }
     }
 
-    public Task MatchAsync(JsonElement element, T matchTarget)
+    public Task<FilterException?> MatchAsync(JsonElement element, T matchTarget)
     {
-        if (element[1].CompareTo(this, matchTarget) >= 0 && element[0].CompareTo(this, matchTarget) <= 0)
+        var (rightCompareResult, checkResult1) = element[1].CompareTo(this, matchTarget);
+        if (checkResult1 is not null)
         {
-            return Task.CompletedTask;
+            return Task.FromResult(checkResult1);
+        }
+        var (leftCompareResult, checkResult2) = element[0].CompareTo(this, matchTarget);
+        if (checkResult2 is not null)
+        {
+            return Task.FromResult(checkResult2);
         }
 
-        this.ThrowNotMatchException(matchTarget, element.ToString());
-        return Task.CompletedTask;
+        if (rightCompareResult >= 0 && leftCompareResult <= 0)
+        {
+            return Task.FromResult<FilterException?>(null);
+        }
+
+        return Task.FromResult(this.CreateNotMatchException(matchTarget, element.ToString()));
     }
 }
