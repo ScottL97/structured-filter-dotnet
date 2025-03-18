@@ -120,20 +120,3 @@ catch (FilterException e)
 {
     printFilterException(filterJson, e);
 }
-
-var jsonFilterService = new JsonPathFilterService();
-var jObject = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(playerJson)!;
-
-filterJson = "{\"$.User.Uid\": 1000000}";
-await jsonFilterService.MustMatchAsync(filterJson, jObject);
-printMatchSuccessfully(playerJson, filterJson);
-
-try
-{
-    filterJson = "{\"$.User.Uid\": \"2000000\"}";
-    await jsonFilterService.MustMatchAsync(filterJson, jObject);
-}
-catch (FilterException e)
-{
-    printFilterException(filterJson, e);
-}

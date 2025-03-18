@@ -6,7 +6,7 @@ using StructuredFilter.Filters.Common;
 
 namespace StructuredFilter.Filters.BasicFilters;
 
-public class BoolFilterFactory : IFilterFactory<bool>
+public class BoolFilterFactory : IBasicFilterFactory<bool>
 {
     private readonly FrozenDictionary<string, IBoolFilter> _boolFilters;
 
@@ -17,7 +17,7 @@ public class BoolFilterFactory : IFilterFactory<bool>
             .ToFrozenDictionary();
     }
 
-    public IFilter<bool> Get(string key)
+    public IBasicFilter<bool> Get(string key)
     {
         if (_boolFilters.TryGetValue(key, out var boolFilter))
         {

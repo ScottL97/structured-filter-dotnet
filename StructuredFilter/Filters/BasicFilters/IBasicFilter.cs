@@ -3,10 +3,10 @@ using StructuredFilter.Filters.Common;
 
 namespace StructuredFilter.Filters.BasicFilters;
 
-public interface INumberFilter : IFilter<double>;
+public interface INumberFilter : IBasicFilter<double>;
 
-public interface IStringFilter : IFilter<string>;
+public interface IStringFilter : IBasicFilter<string>;
 
-public interface IVersionFilter : IFilter<Version>;
+public interface IVersionFilter : IBasicFilter<Version>;
 
-public interface IBoolFilter : IFilter<bool>;
+public interface IBoolFilter : IBasicFilter<bool>;

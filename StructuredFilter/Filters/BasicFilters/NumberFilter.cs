@@ -6,7 +6,7 @@ using StructuredFilter.Filters.Common;
 
 namespace StructuredFilter.Filters.BasicFilters;
 
-public class NumberFilterFactory : IFilterFactory<double>
+public class NumberFilterFactory : IBasicFilterFactory<double>
 {
     private readonly FrozenDictionary<string, INumberFilter> _numberFilters;
 
@@ -17,7 +17,7 @@ public class NumberFilterFactory : IFilterFactory<double>
             .ToFrozenDictionary();
     }
 
-    public IFilter<double> Get(string key)
+    public IBasicFilter<double> Get(string key)
     {
         if (_numberFilters.TryGetValue(key, out var numberFilter))
         {

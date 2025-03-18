@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using StructuredFilter.Filters.Common;
@@ -8,20 +9,20 @@ using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters.LogicFilters;
 
-public class LogicFilterFactory<T> : IFilterFactory<T>
+public class LogicFilterFactory<T> : ILogicFilterFactory<T>
 {
-    private readonly Dictionary<string, IFilter<T>> _logicFilters;
+    private readonly Dictionary<string, ILogicFilter<T>> _logicFilters;
 
-    public LogicFilterFactory(IEnumerable<IFilter<T>> logicFilters)
+    public LogicFilterFactory(IEnumerable<ILogicFilter<T>> logicFilters)
     {
-        _logicFilters = new Dictionary<string, IFilter<T>>();
+        _logicFilters = new Dictionary<string, ILogicFilter<T>>();
         foreach (var logicFilter in logicFilters)
         {
             _logicFilters.Add(logicFilter.GetKey(), logicFilter);
         }
     }
 
-    public IFilter<T> Get(string key)
+    public ILogicFilter<T> Get(string key)
     {
         if (_logicFilters.TryGetValue(key, out var logicFilter))
         {
@@ -34,10 +35,10 @@ public class LogicFilterFactory<T> : IFilterFactory<T>
 
     public Dictionary<string, IFilter<T>> GetAll()
     {
-        return _logicFilters;
+        return _logicFilters.ToDictionary(kv => kv.Key, IFilter<T> (kv) => kv.Value);
     }
 
-    public void AddFilter(IFilter<T> filter)
+    public void AddFilter(ILogicFilter<T> filter)
     {
         _logicFilters.Add(filter.GetKey(), filter);
     }
@@ -45,7 +46,7 @@ public class LogicFilterFactory<T> : IFilterFactory<T>
 
 [FilterLabel("所有 filter 均匹配")]
 [FilterKey("$and")]
-public class AndFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
+public class AndFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>, ILogicFilter<T>
 {
     public override void Valid(JsonElement element)
     {
@@ -63,24 +64,15 @@ public class AndFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
         }
     }
 
-    public override async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
+    public async Task LazyMatchAsync(FilterArray filterArray, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {
-            foreach (var filterObject in element.EnumerateArray())
+            foreach (var filterObject in filterArray.FilterObjects)
             {
                 // 只要有一个filter不匹配，就抛异常
-                foreach (var property in filterObject.EnumerateObject())
-                {
-                    
-                        if (property.IsJsonPathFilter())
-                        {
-                            await sceneFilterFactory.Get(Consts.JsonPathFilterKey).LazyMatchAsync(filterObject, matchTargetGetter);
-                            continue;
-                        }
-                        var filter = sceneFilterFactory.Get(property.Name);
-                        await filter.LazyMatchAsync(property.Value, matchTargetGetter);
-                }
+                var filter = sceneFilterFactory.Get(filterObject.Key);
+                await filter.LazyMatchAsync(filterObject.FilterKv!.Value, matchTargetGetter);
             }
         }
         catch (FilterException e)
@@ -89,25 +81,15 @@ public class AndFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
         }
     }
 
-    public override async Task MatchAsync(JsonElement element, T matchTarget)
+    public async Task MatchAsync(FilterArray filterArray, T matchTarget)
     {
         try
         {
-            foreach (var filterObject in element.EnumerateArray())
+            foreach (var filterObject in filterArray.FilterObjects)
             {
                 // 只要有一个filter不匹配，就抛异常
-                foreach (var property in filterObject.EnumerateObject())
-                {
-                    
-                        if (property.IsJsonPathFilter())
-                        {
-                            await sceneFilterFactory.Get(Consts.JsonPathFilterKey).MatchAsync(filterObject, matchTarget);
-                            continue;
-                        }
-                        var filter = sceneFilterFactory.Get(property.Name);
-                        await filter.MatchAsync(property.Value, matchTarget);
-                    
-                }
+                var filter = sceneFilterFactory.Get(filterObject.Key);
+                await filter.MatchAsync(filterObject.FilterKv!.Value, matchTarget);
             }
         }
         catch (FilterException e)
@@ -119,7 +101,7 @@ public class AndFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
 
 [FilterLabel("任意一个 filter 匹配")]
 [FilterKey("$or")]
-public class OrFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
+public class OrFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>, ILogicFilter<T>
 {
     public override void Valid(JsonElement element)
     {
@@ -137,62 +119,46 @@ public class OrFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>
         }
     }
 
-    public override async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
+    public async Task LazyMatchAsync(FilterArray filterArray, LazyObjectGetter<T> matchTargetGetter)
     {
         var failedKeyPath = new List<Tree<string>>();
-        foreach (var filterObject in element.EnumerateArray())
+        foreach (var filterObject in filterArray.FilterObjects)
         {
-            foreach (var property in filterObject.EnumerateObject())
+            try
             {
-                try
-                {
-                    if (property.IsJsonPathFilter())
-                    {
-                        await sceneFilterFactory.Get(Consts.JsonPathFilterKey).LazyMatchAsync(filterObject, matchTargetGetter);
-                        continue;
-                    }
-                    var filter = sceneFilterFactory.Get(property.Name);
-                    await filter.LazyMatchAsync(property.Value, matchTargetGetter);
-                }
-                catch (FilterException e)
-                {
-                    failedKeyPath.Add(e.FailedKeyPath);
-                    continue;
-                }
-
-                // 只要有一个filter匹配，就匹配成功，不抛异常
-                return;
+                var filter = sceneFilterFactory.Get(filterObject.Key);
+                await filter.LazyMatchAsync(filterObject.FilterKv!.Value, matchTargetGetter);
             }
+            catch (FilterException e)
+            {
+                failedKeyPath.Add(e.FailedKeyPath);
+                continue;
+            }
+
+            // 只要有一个filter匹配，就匹配成功，不抛异常
+            return;
         }
 
         throw new FilterException(FilterStatusCode.NotMatched, "no filters match $or", GetKey()).AppendFailedKeys(failedKeyPath);
     }
 
-    public override async Task MatchAsync(JsonElement element, T matchTarget)
+    public async Task MatchAsync(FilterArray filterArray, T matchTarget)
     {
         var failedKeyPath = new List<Tree<string>>();
-        foreach (var filterObject in element.EnumerateArray())
+        foreach (var filterObject in filterArray.FilterObjects)
         {
-            foreach (var property in filterObject.EnumerateObject())
+            try
             {
-                try
-                {
-                    if (property.IsJsonPathFilter())
-                    {
-                        await sceneFilterFactory.Get(Consts.JsonPathFilterKey).MatchAsync(filterObject, matchTarget);
-                        continue;
-                    }
-                    var filter = sceneFilterFactory.Get(property.Name);
-                    await filter.MatchAsync(property.Value, matchTarget);
-                }
-                catch (FilterException e)
-                {
-                    failedKeyPath.Add(e.FailedKeyPath);
-                    continue;
-                }
-                // 只要有一个filter匹配，就匹配成功，不抛异常
-                return;
+                var filter = sceneFilterFactory.Get(filterObject.Key);
+                await filter.MatchAsync(filterObject.FilterKv!.Value, matchTarget);
             }
+            catch (FilterException e)
+            {
+                failedKeyPath.Add(e.FailedKeyPath);
+                continue;
+            }
+            // 只要有一个filter匹配，就匹配成功，不抛异常
+            return;
         }
 
         throw new FilterException(FilterStatusCode.NotMatched, "no filters match $or", GetKey()).AppendFailedKeys(failedKeyPath);

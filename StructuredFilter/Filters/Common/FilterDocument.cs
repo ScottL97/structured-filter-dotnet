@@ -1,11 +1,9 @@
-﻿using System.Text.Json;
+﻿namespace StructuredFilter.Filters.Common;
 
-namespace StructuredFilter.Filters.Common;
-
-public class FilterDocument<T>
+public readonly record struct FilterDocument<T>
 {
-    private string RawFilter { get; set; }
-    public JsonDocument Document { get; set; }
+    private string RawFilter { get; }
+    private FilterTree Tree { get; }
 
     public FilterDocument(string rawFilter, FilterFactory<T> filterFactory)
     {
@@ -15,8 +13,31 @@ public class FilterDocument<T>
         }
 
         RawFilter = FilterNormalizer.Normalize(rawFilter);
-        Document = JsonDocument.Parse(RawFilter);
+        Tree = FilterTree.Parse(RawFilter, filterFactory);
+    }
 
-        FilterValidator.MustValid(Document, filterFactory);
+    public bool IsRootLogicFilter()
+    {
+        return Tree.Root.FilterArray is not null;
+    }
+
+    public FilterArray GetRootFilterArray()
+    {
+        return Tree.Root.FilterArray!.Value;
+    }
+
+    public bool IsRootSceneFilter()
+    {
+        return Tree.Root.FilterKv is not null;
+    }
+
+    public FilterKv GetRootFilterKv()
+    {
+        return Tree.Root.FilterKv!.Value;
+    }
+
+    public string GetRootKey()
+    {
+        return Tree.Root.Key;
     }
 }

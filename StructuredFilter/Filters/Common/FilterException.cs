@@ -64,7 +64,7 @@ public static class FilterExceptionExtensions
         throw new FilterException(FilterStatusCode.MatchError, $"matchTarget of type {typeof(T)} get failed, args: {JsonSerializer.Serialize(args)}", filter.GetKey());
     }
 
-    public static void ThrowNotMatchException<T>(this IFilter<T> filter, T matchTarget, string filterValue)
+    public static void ThrowNotMatchException<T>(this IBasicFilter<T> filter, T matchTarget, string filterValue)
     {
         throw new FilterException(FilterStatusCode.NotMatched, $"matchTarget {matchTarget} of type {typeof(T)} not match {{{filter.GetKey()}: {filterValue}}}", filter.GetKey());
     }

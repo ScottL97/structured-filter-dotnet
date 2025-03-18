@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Text.Json;
-using System.Threading.Tasks;
-using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters.Common;
 
-public abstract class Filter<T> : IFilter<T>
+public abstract class Filter<T>
 {
     protected string? KeyOverride { get; set; }
     protected string? LabelOverride { get; set; }
@@ -53,7 +51,4 @@ public abstract class Filter<T> : IFilter<T>
     }
 
     public abstract void Valid(JsonElement element);
-
-    public abstract Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter);
-    public abstract Task MatchAsync(JsonElement element, T matchTarget);
 }

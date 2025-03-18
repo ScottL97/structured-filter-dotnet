@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Threading.Tasks;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.Common.FilterTypes;
@@ -28,14 +27,12 @@ public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSce
         }
     }
 
-    protected override async Task LazyMatchInternalAsync(JsonElement filterElement, LazyObjectGetter<T> matchTargetGetter)
+    protected override async Task LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
     {
-        var kv = filterElement.EnumerateObject().ToArray()[0];
-
         try
         {
-            var filter = filterFactory.BoolFilterFactory.Get(kv.Name);
-            await filter.LazyMatchAsync(kv.Value, new LazyObjectGetter<bool>(async _ =>
+            var filter = filterFactory.BoolFilterFactory.Get(filterKv.Key);
+            await filter.LazyMatchAsync(filterKv.Value, new LazyObjectGetter<bool>(async _ =>
             {
                 var matchTarget = await matchTargetGetter.GetAsync();
                 return (await boolValueGetter(matchTarget), true);
@@ -47,14 +44,12 @@ public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSce
         }
     }
 
-    protected override async Task MatchInternalAsync(JsonElement filterElement, T matchTarget)
+    protected override async Task MatchInternalAsync(FilterKv filterKv, T matchTarget)
     {
-        var kv = filterElement.EnumerateObject().ToArray()[0];
-
         try
         {
-            var filter = filterFactory.BoolFilterFactory.Get(kv.Name);
-            await filter.MatchAsync(kv.Value, await boolValueGetter(matchTarget));
+            var filter = filterFactory.BoolFilterFactory.Get(filterKv.Key);
+            await filter.MatchAsync(filterKv.Value, await boolValueGetter(matchTarget));
         }
         catch (FilterException e)
         {

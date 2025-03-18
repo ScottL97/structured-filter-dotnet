@@ -29,14 +29,12 @@ public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, Vers
         }
     }
 
-    protected override async Task LazyMatchInternalAsync(JsonElement filterElement, LazyObjectGetter<T> matchTargetGetter)
+    protected override async Task LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
     {
-        var kv = filterElement.EnumerateObject().ToArray()[0];
-
         try
         {
-            var filter = filterFactory.VersionFilterFactory.Get(kv.Name);
-            await filter.LazyMatchAsync(kv.Value, new LazyObjectGetter<Version>(async _ =>
+            var filter = filterFactory.VersionFilterFactory.Get(filterKv.Key);
+            await filter.LazyMatchAsync(filterKv.Value, new LazyObjectGetter<Version>(async _ =>
             {
                 var matchTarget = await matchTargetGetter.GetAsync();
                 return (await versionValueGetter(matchTarget), true);
@@ -48,14 +46,12 @@ public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, Vers
         }
     }
 
-    protected override async Task MatchInternalAsync(JsonElement filterElement, T matchTarget)
+    protected override async Task MatchInternalAsync(FilterKv filterKv, T matchTarget)
     {
-        var kv = filterElement.EnumerateObject().ToArray()[0];
-
         try
         {
-            var filter = filterFactory.VersionFilterFactory.Get(kv.Name);
-            await filter.MatchAsync(kv.Value, await versionValueGetter(matchTarget));
+            var filter = filterFactory.VersionFilterFactory.Get(filterKv.Key);
+            await filter.MatchAsync(filterKv.Value, await versionValueGetter(matchTarget));
         }
         catch (FilterException e)
         {

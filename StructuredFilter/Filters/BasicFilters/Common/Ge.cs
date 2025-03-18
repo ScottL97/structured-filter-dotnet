@@ -8,14 +8,14 @@ namespace StructuredFilter.Filters.BasicFilters.Common;
 
 [FilterLabel("大于等于")]
 [FilterKey("$ge")]
-internal class GeFilter<T>: Filter<T>
+internal class GeFilter<T>: Filter<T>, IBasicFilter<T>
 {
     public override void Valid(JsonElement element)
     {
         element.AssertIsRightElementType(this);
     }
 
-    public override async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
+    public async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {
@@ -33,7 +33,7 @@ internal class GeFilter<T>: Filter<T>
         }
     }
 
-    public override Task MatchAsync(JsonElement element, T matchTarget)
+    public Task MatchAsync(JsonElement element, T matchTarget)
     {
         if (element.MatchGe(this, matchTarget))
         {

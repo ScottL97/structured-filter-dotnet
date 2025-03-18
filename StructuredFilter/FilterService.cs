@@ -2,9 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 using StructuredFilter.Filters;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.SceneFilters;
@@ -12,32 +10,19 @@ using StructuredFilter.Utils;
 
 namespace StructuredFilter;
 
-public class JsonPathFilterService : FilterService<JObject>
-{
-    public JsonPathFilterService(FilterOption<JObject>? option = null) : base(option)
-    {
-        WithSceneFilter(f => new JsonPathFilter(f));
-    }
-}
-
 public class FilterService<T>(FilterOption<T>? option=null)
 {
     protected readonly FilterFactory<T> FilterFactory = new();
 
     private readonly ConcurrentDictionary<string, FilterDocument<T>> _filterDocuments = new ();
 
-    public delegate IFilter<T> SceneFilterCreator(FilterFactory<T> filterFactory);
-    
+    public delegate ISceneFilter<T> SceneFilterCreator(FilterFactory<T> filterFactory);
+
     private readonly FilterOption<T> _filterOption = option ?? new FilterOption<T>();
 
     public void MustValidFilter(string filter)
     {
         FilterValidator.MustValid(filter, FilterFactory);
-    }
-
-    public void MustValidFilter(JsonDocument filterDocument)
-    {
-        FilterValidator.MustValid(filterDocument, FilterFactory);
     }
 
     public async Task<FilterService<T>> LoadDynamicSceneFilters()
@@ -133,15 +118,20 @@ public class FilterService<T>(FilterOption<T>? option=null)
         try
         {
             var filterDocument = GetFilterDocument(rawFilter);
-            foreach (var property in filterDocument.Document.RootElement.EnumerateObject())
+
+            if (filterDocument.IsRootLogicFilter())
             {
-                var filter = FilterFactory.Get(property.Name);
-                if (filter.GetType() == typeof(JsonPathFilter))
-                {
-                    await filter.MatchAsync(filterDocument.Document.RootElement, matchTarget);
-                    continue;
-                }
-                await filter.MatchAsync(property.Value, matchTarget);
+                var filter = FilterFactory.GetLogicFilter(filterDocument.GetRootKey());
+                await filter.MatchAsync(filterDocument.GetRootFilterArray(), matchTarget);
+            }
+            else if (filterDocument.IsRootSceneFilter())
+            {
+                var filter = FilterFactory.GetSceneFilter(filterDocument.GetRootKey());
+                await filter.MatchAsync(filterDocument.GetRootFilterKv(), matchTarget);
+            }
+            else
+            {
+                throw new FilterException(FilterStatusCode.Invalid, "filter root is neither a logic filter nor a scene filter");
             }
         }
         catch (FilterException)
@@ -160,15 +150,20 @@ public class FilterService<T>(FilterOption<T>? option=null)
         try
         {
             var filterDocument = GetFilterDocument(rawFilter);
-            foreach (var property in filterDocument.Document.RootElement.EnumerateObject())
+
+            if (filterDocument.IsRootLogicFilter())
             {
-                var filter = FilterFactory.Get(property.Name);
-                if (filter.GetType() == typeof(JsonPathFilter))
-                {
-                    await filter.LazyMatchAsync(filterDocument.Document.RootElement, matchTargetGetter);
-                    continue;
-                }
-                await filter.LazyMatchAsync(property.Value, matchTargetGetter);
+                var filter = FilterFactory.GetLogicFilter(filterDocument.GetRootKey());
+                await filter.LazyMatchAsync(filterDocument.GetRootFilterArray(), matchTargetGetter);
+            }
+            else if (filterDocument.IsRootSceneFilter())
+            {
+                var filter = FilterFactory.GetSceneFilter(filterDocument.GetRootKey());
+                await filter.LazyMatchAsync(filterDocument.GetRootFilterKv(), matchTargetGetter);
+            }
+            else
+            {
+                throw new FilterException(FilterStatusCode.Invalid, "filter root is neither a logic filter nor a scene filter");
             }
         }
         catch (FilterException)

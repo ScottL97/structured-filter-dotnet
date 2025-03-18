@@ -11,7 +11,7 @@ using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters.BasicFilters;
 
-public class StringFilterFactory : IFilterFactory<string>
+public class StringFilterFactory : IBasicFilterFactory<string>
 {
     private readonly FrozenDictionary<string, IStringFilter> _stringFilters;
 
@@ -22,7 +22,7 @@ public class StringFilterFactory : IFilterFactory<string>
             .ToFrozenDictionary();
     }
 
-    public IFilter<string> Get(string key)
+    public IBasicFilter<string> Get(string key)
     {
         if (_stringFilters.TryGetValue(key, out var stringFilter))
         {
@@ -56,7 +56,7 @@ internal class StringRegexFilter : Filter<string>, IStringFilter
         element.AssertIsValidRegex(this);
     }
 
-    public override async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<string> matchTargetGetter)
+    public async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<string> matchTargetGetter)
     {
         try
         {
@@ -74,7 +74,7 @@ internal class StringRegexFilter : Filter<string>, IStringFilter
         }
     }
 
-    public override Task MatchAsync(JsonElement element, string matchTarget)
+    public Task MatchAsync(JsonElement element, string matchTarget)
     {
         if (Regex.IsMatch(matchTarget, element.GetString()!, RegexOptions.None))
         {

@@ -28,14 +28,12 @@ public abstract class NumberSceneFilter<T>(FilterFactory<T> filterFactory, Numbe
         }
     }
 
-    protected override async Task LazyMatchInternalAsync(JsonElement filterElement, LazyObjectGetter<T> matchTargetGetter)
+    protected override async Task LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
     {
-        var kv = filterElement.EnumerateObject().ToArray()[0];
-
         try
         {
-            var filter = filterFactory.NumberFilterFactory.Get(kv.Name);
-            await filter.LazyMatchAsync(kv.Value, new LazyObjectGetter<double>(async _ =>
+            var filter = filterFactory.NumberFilterFactory.Get(filterKv.Key);
+            await filter.LazyMatchAsync(filterKv.Value, new LazyObjectGetter<double>(async _ =>
             {
                 var matchTarget = await matchTargetGetter.GetAsync();
                 return (await numberValueGetter(matchTarget), true);
@@ -47,14 +45,12 @@ public abstract class NumberSceneFilter<T>(FilterFactory<T> filterFactory, Numbe
         }
     }
 
-    protected override async Task MatchInternalAsync(JsonElement filterElement, T matchTarget)
+    protected override async Task MatchInternalAsync(FilterKv filterKv, T matchTarget)
     {
-        var kv = filterElement.EnumerateObject().ToArray()[0];
-
         try
         {
-            var filter = filterFactory.NumberFilterFactory.Get(kv.Name);
-            await filter.MatchAsync(kv.Value, await numberValueGetter(matchTarget));
+            var filter = filterFactory.NumberFilterFactory.Get(filterKv.Key);
+            await filter.MatchAsync(filterKv.Value, await numberValueGetter(matchTarget));
         }
         catch (FilterException e)
         {

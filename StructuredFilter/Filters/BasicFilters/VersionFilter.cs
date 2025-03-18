@@ -7,7 +7,7 @@ using StructuredFilter.Filters.Common;
 
 namespace StructuredFilter.Filters.BasicFilters;
 
-public class VersionFilterFactory : IFilterFactory<Version>
+public class VersionFilterFactory : IBasicFilterFactory<Version>
 {
     private readonly FrozenDictionary<string, IVersionFilter> _versionFilters;
 
@@ -18,7 +18,7 @@ public class VersionFilterFactory : IFilterFactory<Version>
             .ToFrozenDictionary();
     }
 
-    public IFilter<Version> Get(string key)
+    public IBasicFilter<Version> Get(string key)
     {
         if (_versionFilters.TryGetValue(key, out var versionFilter))
         {

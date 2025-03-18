@@ -12,11 +12,31 @@ namespace StructuredFilter.Filters;
 
 public interface IFilterFactory<T>
 {
-    IFilter<T> Get(string key);
     Dictionary<string, IFilter<T>> GetAll();
 }
 
-public class FilterFactory<T> : IFilterFactory<T>
+public interface IRootFilterFactory<T> : IFilterFactory<T>
+{
+    ISceneFilter<T> GetSceneFilter(string key);
+    ILogicFilter<T> GetLogicFilter(string key);
+}
+
+public interface ILogicFilterFactory<T> : IFilterFactory<T>
+{
+    ILogicFilter<T> Get(string key);
+}
+
+public interface ISceneFilterFactory<T> : IFilterFactory<T>
+{
+    ISceneFilter<T> Get(string key);
+}
+
+public interface IBasicFilterFactory<T> : IFilterFactory<T>
+{
+    IBasicFilter<T> Get(string key);
+}
+
+public class FilterFactory<T> : IRootFilterFactory<T>
 {
     public readonly NumberFilterFactory NumberFilterFactory;
     public readonly BoolFilterFactory BoolFilterFactory;
@@ -66,7 +86,7 @@ public class FilterFactory<T> : IFilterFactory<T>
         ]);
     }
 
-    public FilterFactory<T> WithLogicFilters(IEnumerable<IFilter<T>> logicFilters)
+    public FilterFactory<T> WithLogicFilters(IEnumerable<ILogicFilter<T>> logicFilters)
     {
         foreach (var logicFilter in logicFilters)
         {
@@ -76,14 +96,14 @@ public class FilterFactory<T> : IFilterFactory<T>
         return this;
     }
 
-    public FilterFactory<T> WithSceneFilter(IFilter<T> sceneFilter)
+    public FilterFactory<T> WithSceneFilter(ISceneFilter<T> sceneFilter)
     {
         _sceneFilterFactory.AddFilter(sceneFilter);
 
         return this;
     }
 
-    public FilterFactory<T> WithSceneFilters(IEnumerable<IFilter<T>> sceneFilters)
+    public FilterFactory<T> WithSceneFilters(IEnumerable<ISceneFilter<T>> sceneFilters)
     {
         foreach (var sceneFilter in sceneFilters)
         {
@@ -111,13 +131,13 @@ public class FilterFactory<T> : IFilterFactory<T>
 
             return f.BasicType switch
             {
-                FilterBasicType.Bool => (IFilter<T>)new DynamicBoolSceneFilter<T>(this,
+                FilterBasicType.Bool => (ISceneFilter<T>)new DynamicBoolSceneFilter<T>(this,
                     filterOption.DynamicBoolSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
-                FilterBasicType.Number => (IFilter<T>)new DynamicNumberSceneFilter<T>(this,
+                FilterBasicType.Number => (ISceneFilter<T>)new DynamicNumberSceneFilter<T>(this,
                     filterOption.DynamicNumberSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
-                FilterBasicType.String => (IFilter<T>)new DynamicStringSceneFilter<T>(this,
+                FilterBasicType.String => (ISceneFilter<T>)new DynamicStringSceneFilter<T>(this,
                     filterOption.DynamicStringSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
-                FilterBasicType.Version => (IFilter<T>)new DynamicVersionSceneFilter<T>(this,
+                FilterBasicType.Version => (ISceneFilter<T>)new DynamicVersionSceneFilter<T>(this,
                     filterOption.DynamicVersionSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
                 _ => throw new FilterException(FilterStatusCode.OptionError, $"unknown filter basic type {f.BasicType} with key {f.Key}")
             };
@@ -126,21 +146,14 @@ public class FilterFactory<T> : IFilterFactory<T>
         return this;
     }
 
-    public IFilter<T> Get(string key)
+    public ISceneFilter<T> GetSceneFilter(string key)
     {
-        if (key.StartsWith("$.") || key.StartsWith("$["))
-        {
-            return _sceneFilterFactory.Get(Consts.JsonPathFilterKey);
-        }
+        return _sceneFilterFactory.Get(key);
+    }
 
-        try
-        {
-            return _logicFilterFactory.Get(key);
-        }
-        catch (FilterException)
-        {
-            return _sceneFilterFactory.Get(key);
-        }
+    public ILogicFilter<T> GetLogicFilter(string key)
+    {
+        return _logicFilterFactory.Get(key);
     }
 
     public Dictionary<string, IFilter<T>> GetAll()

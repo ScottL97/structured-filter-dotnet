@@ -28,14 +28,12 @@ public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, Strin
         }
     }
 
-    protected override async Task LazyMatchInternalAsync(JsonElement filterElement, LazyObjectGetter<T> matchTargetGetter)
+    protected override async Task LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
     {
-        var kv = filterElement.EnumerateObject().ToArray()[0];
-
         try
         {
-            var filter = filterFactory.StringFilterFactory.Get(kv.Name);
-            await filter.LazyMatchAsync(kv.Value, new LazyObjectGetter<string>(async _ =>
+            var filter = filterFactory.StringFilterFactory.Get(filterKv.Key);
+            await filter.LazyMatchAsync(filterKv.Value, new LazyObjectGetter<string>(async _ =>
             {
                 var matchTarget = await matchTargetGetter.GetAsync();
                 return (await stringValueGetter(matchTarget), true);
@@ -47,14 +45,12 @@ public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, Strin
         }
     }
 
-    protected override async Task MatchInternalAsync(JsonElement filterElement, T matchTarget)
+    protected override async Task MatchInternalAsync(FilterKv filterKv, T matchTarget)
     {
-        var kv = filterElement.EnumerateObject().ToArray()[0];
-
         try
         {
-            var filter = filterFactory.StringFilterFactory.Get(kv.Name);
-            await filter.MatchAsync(kv.Value, await stringValueGetter(matchTarget));
+            var filter = filterFactory.StringFilterFactory.Get(filterKv.Key);
+            await filter.MatchAsync(filterKv.Value, await stringValueGetter(matchTarget));
         }
         catch (FilterException e)
         {

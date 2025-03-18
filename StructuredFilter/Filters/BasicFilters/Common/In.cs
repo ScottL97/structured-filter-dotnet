@@ -9,14 +9,14 @@ namespace StructuredFilter.Filters.BasicFilters.Common;
 
 [FilterLabel("属于")]
 [FilterKey("$in")]
-internal class InFilter<T>: Filter<T>
+internal class InFilter<T>: Filter<T>, IBasicFilter<T>
 {
     public override void Valid(JsonElement element)
     {
         element.AssertIsValidArray(this);
     }
 
-    public override async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
+    public async Task LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {
@@ -34,7 +34,7 @@ internal class InFilter<T>: Filter<T>
         }
     }
 
-    public override Task MatchAsync(JsonElement element, T matchTarget)
+    public Task MatchAsync(JsonElement element, T matchTarget)
     {
         if (element.EnumerateArray().Any(e => e.MatchEq(this, matchTarget)))
         {
