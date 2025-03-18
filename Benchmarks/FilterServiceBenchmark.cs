@@ -72,4 +72,28 @@ public class FilterServiceBenchmark
             await _filterServiceWithoutCache.MatchAsync(rawFilter, _player);
         }
     }
+
+    [Benchmark]
+    public async Task FilterServiceOneMatchOkWithCache()
+    {
+        await _filterServiceWithCache.MatchAsync("{\"pid\": {\"$in\": [1000, 1001]}}", _player);
+    }
+
+    [Benchmark]
+    public async Task FilterServiceOneMatchAndOkWithCache()
+    {
+        await _filterServiceWithCache.MatchAsync("{\"$and\": [{\"userName\": {\"$eq\": \"Scott\"}}, {\"playerGameVersion\": {\"$le\": \"1.1.0\"}}]}", _player);
+    }
+
+    [Benchmark]
+    public async Task FilterServiceOneMatchFailedWithCache()
+    {
+        await _filterServiceWithCache.MatchAsync("{\"pid\": {\"$in\": [1001, 1002]}}", _player);
+    }
+
+    [Benchmark]
+    public async Task FilterServiceOneMatchAndFailedWithCache()
+    {
+        await _filterServiceWithCache.MatchAsync("{\"$and\": [{\"userName\": {\"$eq\": \"Scott\"}}, {\"playerGameVersion\": {\"$ge\": \"1.1.0\"}}]}", _player);
+    }
 }

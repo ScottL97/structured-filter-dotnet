@@ -2,7 +2,7 @@
 <html lang='en'>
 <head>
 <meta charset='utf-8' />
-<title>Benchmarks.FilterServiceBenchmark-20250212-174448</title>
+<title>Benchmarks.FilterServiceBenchmark-20250318-205050</title>
 
 <style type="text/css">
 	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
@@ -13,19 +13,23 @@
 </head>
 <body>
 <pre><code>
-BenchmarkDotNet v0.14.0, Windows 11 (10.0.22631.4751/23H2/2023Update/SunValley3)
+BenchmarkDotNet v0.14.0, Windows 11 (10.0.22631.5039/23H2/2023Update/SunValley3)
 12th Gen Intel Core i7-12700F, 1 CPU, 20 logical and 12 physical cores
-.NET SDK 9.0.102
-  [Host]     : .NET 9.0.1 (9.0.124.61010), X64 RyuJIT AVX2
-  DefaultJob : .NET 9.0.1 (9.0.124.61010), X64 RyuJIT AVX2
+.NET SDK 9.0.104
+  [Host]     : .NET 9.0.3 (9.0.325.11113), X64 RyuJIT AVX2
+  DefaultJob : .NET 9.0.3 (9.0.325.11113), X64 RyuJIT AVX2
 </code></pre>
 <pre><code></code></pre>
 
 <table>
-<thead><tr><th>Method             </th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen0</th><th>Allocated</th>
+<thead><tr><th>Method                           </th><th>Mean </th><th>Error</th><th>StdDev</th><th>Gen0</th><th>Allocated</th>
 </tr>
-</thead><tbody><tr><td>FilterServiceWithCache</td><td>58.96 &mu;s</td><td>0.646 &mu;s</td><td>0.604 &mu;s</td><td>1.4648</td><td>19.22 KB</td>
-</tr><tr><td>FilterServiceWithoutCache</td><td>91.51 &mu;s</td><td>1.500 &mu;s</td><td>1.330 &mu;s</td><td>3.9063</td><td>50.76 KB</td>
+</thead><tbody><tr><td>FilterServiceWithCache</td><td>11,892.7 ns</td><td>217.68 ns</td><td>203.61 ns</td><td>0.8545</td><td>11641 B</td>
+</tr><tr><td>FilterServiceWithoutCache</td><td>29,026.1 ns</td><td>561.09 ns</td><td>822.44 ns</td><td>3.1738</td><td>43931 B</td>
+</tr><tr><td>FilterServiceOneMatchOkWithCache</td><td>124.2 ns</td><td>2.50 ns</td><td>3.97 ns</td><td>0.0317</td><td>416 B</td>
+</tr><tr><td>FilterServiceOneMatchAndOkWithCache</td><td>380.3 ns</td><td>4.82 ns</td><td>4.51 ns</td><td>0.0787</td><td>1032 B</td>
+</tr><tr><td>FilterServiceOneMatchFailedWithCache</td><td>3,350.6 ns</td><td>37.30 ns</td><td>34.89 ns</td><td>0.2022</td><td>2664 B</td>
+</tr><tr><td>FilterServiceOneMatchAndFailedWithCache</td><td>4,514.8 ns</td><td>71.88 ns</td><td>67.23 ns</td><td>0.2899</td><td>3944 B</td>
 </tr></tbody></table>
 </body>
 </html>
