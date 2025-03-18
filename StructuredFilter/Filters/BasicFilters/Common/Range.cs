@@ -44,24 +44,24 @@ internal class RangeFilter<T>: Filter<T>, IBasicFilter<T>
         }
     }
 
-    public Task<FilterException?> MatchAsync(JsonElement element, T matchTarget)
+    public FilterException? Match(JsonElement element, T matchTarget)
     {
         var (rightCompareResult, checkResult1) = element[1].CompareTo(this, matchTarget);
         if (checkResult1 is not null)
         {
-            return Task.FromResult(checkResult1);
+            return checkResult1;
         }
         var (leftCompareResult, checkResult2) = element[0].CompareTo(this, matchTarget);
         if (checkResult2 is not null)
         {
-            return Task.FromResult(checkResult2);
+            return checkResult2;
         }
 
         if (rightCompareResult >= 0 && leftCompareResult <= 0)
         {
-            return Task.FromResult<FilterException?>(null);
+            return null;
         }
 
-        return Task.FromResult(this.CreateNotMatchException(matchTarget, element.ToString()));
+        return this.CreateNotMatchException(matchTarget, element.ToString());
     }
 }

@@ -43,7 +43,7 @@ public abstract class NumberSceneFilter<T>(FilterFactory<T> filterFactory, Numbe
         {
             return getResult.PrependFailedKey(GetKey());
         }
-        var filterResult = await filter.MatchAsync(filterKv.Value, await numberValueGetter(matchTarget));
+        var filterResult = filter.Match(filterKv.Value, await numberValueGetter(matchTarget));
         return filterResult?.PrependFailedKey(GetKey());
     }
 }

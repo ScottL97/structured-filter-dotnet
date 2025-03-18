@@ -73,13 +73,13 @@ internal class StringRegexFilter : Filter<string>, IStringFilter
         }
     }
 
-    public Task<FilterException?> MatchAsync(JsonElement element, string matchTarget)
+    public FilterException? Match(JsonElement element, string matchTarget)
     {
         if (Regex.IsMatch(matchTarget, element.GetString()!, RegexOptions.None))
         {
-            return Task.FromResult<FilterException?>(null);
+            return null;
         }
 
-        return Task.FromResult(this.CreateNotMatchException(matchTarget, element.ToString()));
+        return this.CreateNotMatchException(matchTarget, element.ToString());
     }
 }

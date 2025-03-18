@@ -50,7 +50,7 @@ public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, Strin
         {
             return getResult.PrependFailedKey(GetKey());
         }
-        var filterResult = await filter.MatchAsync(filterKv.Value, await stringValueGetter(matchTarget));
+        var filterResult = filter.Match(filterKv.Value, await stringValueGetter(matchTarget));
         return filterResult?.PrependFailedKey(GetKey());
     }
 }

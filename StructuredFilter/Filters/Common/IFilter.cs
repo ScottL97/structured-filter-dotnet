@@ -16,12 +16,7 @@ public interface IBasicFilter<T> : IFilter<T>
 {
     Task<FilterException?> LazyMatchAsync(JsonElement jsonElement, LazyObjectGetter<T> matchTargetGetter);
 
-    /// <summary>
-    /// Needs to be asynchronous as cache may need to be loaded asynchronously
-    /// </summary>
-    /// <param name="jsonElement"></param>
-    /// <param name="matchTarget"></param>
-    Task<FilterException?> MatchAsync(JsonElement jsonElement, T matchTarget);
+    FilterException? Match(JsonElement jsonElement, T matchTarget);
 }
 
 public interface ISceneFilter<T> : IFilter<T>

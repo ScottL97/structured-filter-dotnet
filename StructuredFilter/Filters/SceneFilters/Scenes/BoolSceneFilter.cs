@@ -43,7 +43,7 @@ public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSce
         {
             return getResult.PrependFailedKey(GetKey());
         }
-        var filterResult = await filter.MatchAsync(filterKv.Value, await boolValueGetter(matchTarget));
+        var filterResult = filter.Match(filterKv.Value, await boolValueGetter(matchTarget));
         return filterResult?.PrependFailedKey(GetKey());
     }
 }

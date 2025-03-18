@@ -33,13 +33,13 @@ internal class LtFilter<T>: Filter<T>, IBasicFilter<T>
         }
     }
 
-    public Task<FilterException?> MatchAsync(JsonElement element, T matchTarget)
+    public FilterException? Match(JsonElement element, T matchTarget)
     {
         if (element.MatchLt(this, matchTarget))
         {
-            return Task.FromResult<FilterException?>(null);
+            return null;
         }
 
-        return Task.FromResult(this.CreateNotMatchException(matchTarget, element.ToString()));
+        return this.CreateNotMatchException(matchTarget, element.ToString());
     }
 }

@@ -51,7 +51,7 @@ public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, Vers
         {
             return getResult.PrependFailedKey(GetKey());
         }
-        var filterResult = await filter.MatchAsync(filterKv.Value, await versionValueGetter(matchTarget));
+        var filterResult = filter.Match(filterKv.Value, await versionValueGetter(matchTarget));
         return filterResult?.PrependFailedKey(GetKey());
     }
 }
