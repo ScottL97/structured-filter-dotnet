@@ -7,11 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="StructuredFilter.Grpc" Version="0.0.1" />
-    </ItemGroup>
-
-    <ItemGroup>
         <ProjectReference Include="..\StructuredFilter.AspNetCore\StructuredFilter.AspNetCore.csproj" />
+        <ProjectReference Include="..\StructuredFilter.Grpc\StructuredFilter.Grpc.csproj" />
     </ItemGroup>
 
 </Project>

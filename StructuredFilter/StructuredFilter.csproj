@@ -5,7 +5,7 @@
         <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
         <PackageId>StructuredFilter</PackageId>
         <Nullable>enable</Nullable>
-        <Version>0.0.9</Version>
+        <Version>0.0.10</Version>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
