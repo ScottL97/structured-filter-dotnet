@@ -38,9 +38,23 @@ public class SceneFilterFactory<T> : ISceneFilterFactory<T>
         return _sceneFilters.ToDictionary(kv => kv.Key, IFilter<T> (kv) => kv.Value);
     }
 
-    public void AddFilter(ISceneFilter<T> filter)
+    public void AddFilter(ISceneFilter<T> filter, bool enableOverride = false)
     {
-        _sceneFilters.Add(filter.GetKey(), filter);
+        if (enableOverride)
+        {
+            _sceneFilters.TryAdd(filter.GetKey(), filter);
+        }
+        else
+        {
+            try
+            {
+                _sceneFilters.Add(filter.GetKey(), filter);
+            }
+            catch (ArgumentException)
+            {
+                throw new FilterException(FilterStatusCode.Invalid, $"filter {filter.GetKey()} has already been added");
+            }
+        }
     }
 }
 

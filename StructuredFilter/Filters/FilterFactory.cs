@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using StructuredFilter.Filters.BasicFilters;
@@ -96,18 +97,53 @@ public class FilterFactory<T> : IRootFilterFactory<T>
         return this;
     }
 
-    public FilterFactory<T> WithSceneFilter(ISceneFilter<T> sceneFilter)
+    public FilterFactory<T> WithDynamicFilter(DynamicFilter<T> df,
+        bool enableOverride = false,
+        Func<T?, Task<bool>>? boolValueGetter = null,
+        Func<T?, Task<double>>? numberValueGetter = null,
+        Func<T?, Task<string>>? stringValueGetter = null,
+        Func<T?, Task<Version>>? versionValueGetter = null)
     {
-        _sceneFilterFactory.AddFilter(sceneFilter);
+        if (!FilterBasicType.IsValidFilterBasicType(df.BasicType))
+        {
+            throw new FilterException(FilterStatusCode.Invalid, $"found invalid dynamic filter type {df.BasicType} with key {df.Key}");
+        }
+
+        try
+        {
+            var filter = df.BasicType switch
+            {
+                FilterBasicType.Bool => (ISceneFilter<T>)new DynamicBoolSceneFilter<T>(this,
+                    (player, filterKey) => boolValueGetter(player), df.Key, df.Cacheable, df.Label, df.Cache),
+                FilterBasicType.Number => (ISceneFilter<T>)new DynamicNumberSceneFilter<T>(this,
+                    (player, filterKey) => numberValueGetter(player), df.Key, df.Cacheable, df.Label, df.Cache),
+                FilterBasicType.String => (ISceneFilter<T>)new DynamicStringSceneFilter<T>(this,
+                    (player, filterKey) => stringValueGetter(player), df.Key, df.Cacheable, df.Label, df.Cache),
+                FilterBasicType.Version => (ISceneFilter<T>)new DynamicVersionSceneFilter<T>(this,
+                    (player, filterKey) => versionValueGetter(player), df.Key, df.Cacheable, df.Label, df.Cache),
+                _ => throw new FilterException(FilterStatusCode.OptionError, $"unknown filter basic type {df.BasicType} with key {df.Key}")
+            };
+
+            return WithSceneFilter(filter, enableOverride);
+        }
+        catch (NullReferenceException e)
+        {
+            throw new FilterException(FilterStatusCode.Invalid, $"valueGetter for {df.BasicType} is null");
+        }
+    }
+
+    public FilterFactory<T> WithSceneFilter(ISceneFilter<T> sceneFilter, bool enableOverride = false)
+    {
+        _sceneFilterFactory.AddFilter(sceneFilter, enableOverride);
 
         return this;
     }
 
-    public FilterFactory<T> WithSceneFilters(IEnumerable<ISceneFilter<T>> sceneFilters)
+    public FilterFactory<T> WithSceneFilters(IEnumerable<ISceneFilter<T>> sceneFilters, bool enableOverride = false)
     {
         foreach (var sceneFilter in sceneFilters)
         {
-            WithSceneFilter(sceneFilter);
+            WithSceneFilter(sceneFilter, enableOverride);
         }
 
         return this;
@@ -141,7 +177,7 @@ public class FilterFactory<T> : IRootFilterFactory<T>
                     filterOption.DynamicVersionSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
                 _ => throw new FilterException(FilterStatusCode.OptionError, $"unknown filter basic type {f.BasicType} with key {f.Key}")
             };
-        }));
+        }), true);
 
         return this;
     }

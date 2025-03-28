@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,24 +25,35 @@ public class FilterService<T>(FilterOption<T>? option=null)
         FilterValidator.MustValid(filter, FilterFactory);
     }
 
-    public async Task<FilterService<T>> LoadDynamicSceneFilters()
+    public async Task<FilterService<T>> LoadDynamicSceneFiltersAsync()
     {
         await FilterFactory.LoadDynamicSceneFiltersAsync(_filterOption);
 
         return this;
     }
 
-    public FilterService<T> WithSceneFilter(SceneFilterCreator sceneFilterCreator)
+    public FilterService<T> WithDynamicFilter(DynamicFilter<T> df,
+        bool enableOverride = false,
+        Func<T?, Task<bool>>? boolValueGetter = null,
+        Func<T?, Task<double>>? numberValueGetter = null,
+        Func<T?, Task<string>>? stringValueGetter = null,
+        Func<T?, Task<Version>>? versionValueGetter = null)
     {
-        FilterFactory.WithSceneFilter(sceneFilterCreator(FilterFactory));
+        FilterFactory.WithDynamicFilter(df, enableOverride, boolValueGetter, numberValueGetter, stringValueGetter, versionValueGetter);
         return this;
     }
 
-    public FilterService<T> WithSceneFilters(IEnumerable<SceneFilterCreator> sceneFilterCreators)
+    public FilterService<T> WithSceneFilter(SceneFilterCreator sceneFilterCreator, bool enableOverride = false)
+    {
+        FilterFactory.WithSceneFilter(sceneFilterCreator(FilterFactory), enableOverride);
+        return this;
+    }
+
+    public FilterService<T> WithSceneFilters(IEnumerable<SceneFilterCreator> sceneFilterCreators, bool enableOverride = false)
     {
         foreach (var sceneFilterCreator in sceneFilterCreators)
         {
-            WithSceneFilter(sceneFilterCreator);
+            WithSceneFilter(sceneFilterCreator, enableOverride);
         }
         return this;
     }

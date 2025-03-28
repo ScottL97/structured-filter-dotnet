@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using Demo;
 using Demo.Scenes;
-using Newtonsoft.Json.Linq;
 using StructuredFilter;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Utils;
