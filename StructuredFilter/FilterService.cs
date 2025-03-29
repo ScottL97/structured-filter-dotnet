@@ -204,6 +204,12 @@ public class FilterService<T>(FilterFactory<T>? filterFactor=null, FilterOption<
         throw filterResult;
     }
 
+    public FilterTree GetFilterTree(string rawFilter)
+    {
+        var filterDocument = GetFilterDocument(rawFilter);
+        return filterDocument.Tree;
+    }
+
     private FilterDocument<T> GetFilterDocument(string rawFilter)
     {
         if (_filterOption.EnableFilterDocumentCache)

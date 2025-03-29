@@ -1,9 +1,9 @@
 ﻿namespace StructuredFilter.Filters.Common;
 
-public readonly record struct FilterDocument<T>
+internal readonly record struct FilterDocument<T>
 {
     private string RawFilter { get; }
-    private FilterTree Tree { get; }
+    public FilterTree Tree { get; }
 
     public FilterDocument(string rawFilter, FilterFactory<T> filterFactory)
     {

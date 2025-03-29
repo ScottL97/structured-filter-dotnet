@@ -106,6 +106,35 @@ public class StructuredFilterTests
     }
 
     [Test]
+    public void GetFilterTreeTest()
+    {
+        var filterTree = _filterService.GetFilterTree("{\"pid\":{\"$in\":[1000,1001,1002]}}");
+        Assert.That(filterTree.Root.Key, Is.EqualTo("pid"));
+        Assert.That(filterTree.Root.FilterKv, Is.Not.Null);
+        Assert.That(filterTree.Root.FilterKv.Value.Key, Is.EqualTo("$in"));
+        Assert.That(filterTree.Root.FilterKv.Value.Value.EnumerateArray().Count(), Is.EqualTo(3));
+
+        filterTree = _filterService.GetFilterTree("{\"pid\":{\"$in\":[1000,1001,1002]}}");
+        Assert.That(filterTree.Root.Key, Is.EqualTo("pid"));
+        Assert.That(filterTree.Root.FilterKv, Is.Not.Null);
+        Assert.That(filterTree.Root.FilterArray, Is.Null);
+        Assert.That(filterTree.Root.FilterKv.Value.Key, Is.EqualTo("$in"));
+        Assert.That(filterTree.Root.FilterKv.Value.Value.EnumerateArray().Count(), Is.EqualTo(3));
+
+        filterTree = _filterService.GetFilterTree("{\"$and\":[{\"pid\":{\"$in\":[1000,1001,1002]}},{\"playerGameVersion\":{\"$eq\":\"1.0.0\"}}]}");
+        Assert.That(filterTree.Root.Key, Is.EqualTo("$and"));
+        Assert.That(filterTree.Root.FilterKv, Is.Null);
+        Assert.That(filterTree.Root.FilterArray, Is.Not.Null);
+        var filterObjects = filterTree.Root.FilterArray.Value.FilterObjects.AsEnumerable().ToList();
+        Assert.That(filterObjects.Count, Is.EqualTo(2));
+        Assert.That(filterObjects[0].FilterKv, Is.Not.Null);
+        Assert.That(filterObjects[0].FilterArray, Is.Null);
+        Assert.That(filterObjects[0].Key, Is.EqualTo("pid"));
+        Assert.That(filterObjects[0].FilterKv.Value.Key, Is.EqualTo("$in"));
+        Assert.That(filterObjects[0].FilterKv.Value.Value.EnumerateArray().Count(), Is.EqualTo(3));
+    }
+
+    [Test]
     public async Task ShouldMatchSuccessfully()
     {
         string[] filterJsons = [
