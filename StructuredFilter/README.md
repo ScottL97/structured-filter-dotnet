@@ -171,6 +171,61 @@ foreach (var filteredPlayer in filteredList)
   * StringSceneFilter
   * VersionSceneFilter
 
+## Features
+
+### Cacheable SceneFilter
+
+* If a filter result is cacheable, you can integrate caching in the following ways. First add Cacheable attribute:
+
+```csharp
+[FilterLabel("玩家 ID")]
+[FilterKey("pid")]
+[Cacheable]
+public class PidFilter(FilterFactory<Player> filterFactory)
+    : NumberSceneFilter<Player>(filterFactory, player => Task.FromResult((double)player.Pid));
+```
+
+* Implement IFilterResultCache:
+
+```csharp
+public class PlayerFilterCache : IFilterResultCache<Player>
+{
+    private readonly Dictionary<string, bool> _cacheData = new ();
+    public int HitCount = 0;
+
+    public Task<Tuple<bool, bool>> GetFilterResultCacheAsync(Player matchTarget, string filterKey, FilterKv filterKv)
+    {
+        if (_cacheData.TryGetValue(GetCacheKey(filterKey, filterKv, matchTarget.Pid), out var filterResult))
+        {
+            Interlocked.Add(ref HitCount, 1);
+            return Task.FromResult(new Tuple<bool, bool>(filterResult, true));
+        }
+        return Task.FromResult(new Tuple<bool, bool>(false, false));
+    }
+
+    public Task SetFilterResultCacheAsync(Player matchTarget, string filterKey, FilterKv filterKv, bool result)
+    {
+        _cacheData[GetCacheKey(filterKey, filterKv, matchTarget.Pid)] = result;
+        return Task.CompletedTask;
+    }
+
+    private string GetCacheKey(string filterKey, FilterKv filterKv, long pid)
+    {
+        return $"{filterKey}:{filterKv.Key}:{filterKv.Value}:{pid}";
+    }
+}
+```
+
+* Pass in the IFilterResultCache implementation in the constructor:
+
+```csharp
+[FilterLabel("玩家 ID")]
+[FilterKey("pid")]
+[Cacheable]
+public class PidFilter(FilterFactory<Player> filterFactory)
+    : NumberSceneFilter<Player>(filterFactory, player => Task.FromResult((double)player.Pid), new PlayerFilterCache());
+```
+
 ## FilterValidator
 
 * FilterValidator is used to verify whether a JSON string or a System.Text.Json.JsonDocument is a valid filter:
