@@ -1,4 +1,7 @@
-﻿namespace StructuredFilter.AspNetCore.Demo.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace StructuredFilter.AspNetCore.Demo.Models;
 
 public class User
 {
@@ -16,6 +19,7 @@ public class Player
     public string Name { get; set; }
     public int Level { get; set; }
     public Version GameVersion { get; set; }
+    public List<string> Pets { get; set; }
 }
 
 public class Address

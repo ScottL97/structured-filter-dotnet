@@ -412,7 +412,7 @@ public class StructuredFilterTests
     public async Task ShouldCacheableDynamicFiltersMatchSuccessfully()
     {
         var cache = new PlayerFilterCache();
-        var testCacheableDynamicFilterService = await new FilterService<Player>(new FilterOption<Player>
+        var testCacheableDynamicFilterService = await new FilterService<Player>(option: new FilterOption<Player>
         {
             DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter<Player>[]
             {
@@ -471,7 +471,7 @@ public class StructuredFilterTests
     public async Task ShouldCacheableDynamicFiltersMatchFailed()
     {
         var cache = new PlayerFilterCache();
-        var testCacheableDynamicFilterService = await new FilterService<Player>(new FilterOption<Player>
+        var testCacheableDynamicFilterService = await new FilterService<Player>(option: new FilterOption<Player>
         {
             DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter<Player>[]
             {
@@ -604,7 +604,7 @@ public class StructuredFilterTests
     [Test]
     public async Task ShouldDynamicFiltersMatchSuccessfully()
     {
-        var testDynamicFilterService = await new FilterService<Player>(new FilterOption<Player>
+        var testDynamicFilterService = await new FilterService<Player>(option: new FilterOption<Player>
         {
             DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter<Player>[]
             {
@@ -652,7 +652,7 @@ public class StructuredFilterTests
     [Test]
     public async Task ShouldDynamicFiltersMatchFailed()
     {
-        var testDynamicFilterService = await new FilterService<Player>(new FilterOption<Player>
+        var testDynamicFilterService = await new FilterService<Player>(option: new FilterOption<Player>
         {
             DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter<Player>[]
             {
@@ -715,7 +715,7 @@ public class StructuredFilterTests
     public void TestFilterValidator()
     {
         var filterFactory = new FilterFactory<Player>();
-        filterFactory = filterFactory.WithSceneFilter(new PidFilter(filterFactory));
+        filterFactory = filterFactory.WithSceneFilter(new PidFilter(filterFactory), false);
 
         FilterValidator.MustValid("{\"pid\": 5000}", filterFactory);
         _filterService.MustValidFilter("{\"pid\": 5000}");

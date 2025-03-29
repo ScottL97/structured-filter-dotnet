@@ -1,4 +1,5 @@
-﻿using StructuredFilter.AspNetCore.Demo.Models;
+﻿using System.Threading.Tasks;
+using StructuredFilter.AspNetCore.Demo.Models;
 using StructuredFilter.Filters;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.SceneFilters.Scenes;

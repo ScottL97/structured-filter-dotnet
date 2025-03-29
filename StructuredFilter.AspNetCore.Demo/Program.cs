@@ -1,15 +1,13 @@
+using System;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Builder;
 using StructuredFilter;
 using StructuredFilter.AspNetCore;
 using StructuredFilter.AspNetCore.Demo.Models;
-using StructuredFilter.AspNetCore.Demo.Scenes;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddFilterService<Player>([
-    f => new PidFilter(f),
-    f => new UserNameFilter(f),
-    f => new PlayerGameVersionFilter(f)
-]);
+builder.Services.AddFilterService<Player>();
 
 var app = builder.Build();
 

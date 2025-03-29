@@ -12,6 +12,12 @@ public class FilterOption<T>
     public bool EnableFilterDocumentCache { get; set; } = true;
 
     /// <summary>
+    /// Whether to allow overwriting SceneFilter with the same key;
+    /// if not allowed, adding a SceneFilter with an existing key will throw a FilterException
+    /// </summary>
+    public bool IsSceneFilterOverrideAllowed { get; set; } = false;
+
+    /// <summary>
     /// Methods to obtain dynamic filters' values from match target according to the filter key
     /// </summary>
     public delegate Task<bool> GetDynamicBoolSceneFilterValueAsync(T? matchTarget, string filterKey);

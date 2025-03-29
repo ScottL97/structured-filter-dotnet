@@ -98,7 +98,7 @@ public class FilterFactory<T> : IRootFilterFactory<T>
     }
 
     public FilterFactory<T> WithDynamicFilter(DynamicFilter<T> df,
-        bool enableOverride = false,
+        bool enableOverride,
         Func<T?, Task<bool>>? boolValueGetter = null,
         Func<T?, Task<double>>? numberValueGetter = null,
         Func<T?, Task<string>>? stringValueGetter = null,
@@ -132,14 +132,14 @@ public class FilterFactory<T> : IRootFilterFactory<T>
         }
     }
 
-    public FilterFactory<T> WithSceneFilter(ISceneFilter<T> sceneFilter, bool enableOverride = false)
+    public FilterFactory<T> WithSceneFilter(ISceneFilter<T> sceneFilter, bool enableOverride)
     {
         _sceneFilterFactory.AddFilter(sceneFilter, enableOverride);
 
         return this;
     }
 
-    public FilterFactory<T> WithSceneFilters(IEnumerable<ISceneFilter<T>> sceneFilters, bool enableOverride = false)
+    public FilterFactory<T> WithSceneFilters(IEnumerable<ISceneFilter<T>> sceneFilters, bool enableOverride)
     {
         foreach (var sceneFilter in sceneFilters)
         {

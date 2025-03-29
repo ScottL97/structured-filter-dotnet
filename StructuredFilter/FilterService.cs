@@ -10,50 +10,48 @@ using StructuredFilter.Utils;
 
 namespace StructuredFilter;
 
-public class FilterService<T>(FilterOption<T>? option=null)
+public class FilterService<T>(FilterFactory<T>? filterFactor=null, FilterOption<T>? option=null)
 {
-    protected readonly FilterFactory<T> FilterFactory = new();
+    public delegate ISceneFilter<T> SceneFilterCreator(FilterFactory<T> filterFactory);
 
     private readonly ConcurrentDictionary<string, FilterDocument<T>> _filterDocuments = new ();
 
-    public delegate ISceneFilter<T> SceneFilterCreator(FilterFactory<T> filterFactory);
-
+    private readonly FilterFactory<T> _filterFactory = filterFactor ?? new FilterFactory<T>();
     private readonly FilterOption<T> _filterOption = option ?? new FilterOption<T>();
 
     public void MustValidFilter(string filter)
     {
-        FilterValidator.MustValid(filter, FilterFactory);
+        FilterValidator.MustValid(filter, _filterFactory);
     }
 
     public async Task<FilterService<T>> LoadDynamicSceneFiltersAsync()
     {
-        await FilterFactory.LoadDynamicSceneFiltersAsync(_filterOption);
+        await _filterFactory.LoadDynamicSceneFiltersAsync(_filterOption);
 
         return this;
     }
 
     public FilterService<T> WithDynamicFilter(DynamicFilter<T> df,
-        bool enableOverride = false,
         Func<T?, Task<bool>>? boolValueGetter = null,
         Func<T?, Task<double>>? numberValueGetter = null,
         Func<T?, Task<string>>? stringValueGetter = null,
         Func<T?, Task<Version>>? versionValueGetter = null)
     {
-        FilterFactory.WithDynamicFilter(df, enableOverride, boolValueGetter, numberValueGetter, stringValueGetter, versionValueGetter);
+        _filterFactory.WithDynamicFilter(df, _filterOption.IsSceneFilterOverrideAllowed, boolValueGetter, numberValueGetter, stringValueGetter, versionValueGetter);
         return this;
     }
 
-    public FilterService<T> WithSceneFilter(SceneFilterCreator sceneFilterCreator, bool enableOverride = false)
+    public FilterService<T> WithSceneFilter(SceneFilterCreator sceneFilterCreator)
     {
-        FilterFactory.WithSceneFilter(sceneFilterCreator(FilterFactory), enableOverride);
+        _filterFactory.WithSceneFilter(sceneFilterCreator(_filterFactory), _filterOption.IsSceneFilterOverrideAllowed);
         return this;
     }
 
-    public FilterService<T> WithSceneFilters(IEnumerable<SceneFilterCreator> sceneFilterCreators, bool enableOverride = false)
+    public FilterService<T> WithSceneFilters(IEnumerable<SceneFilterCreator> sceneFilterCreators)
     {
         foreach (var sceneFilterCreator in sceneFilterCreators)
         {
-            WithSceneFilter(sceneFilterCreator, enableOverride);
+            WithSceneFilter(sceneFilterCreator);
         }
         return this;
     }
@@ -116,7 +114,7 @@ public class FilterService<T>(FilterOption<T>? option=null)
 
         if (filterDocument.IsRootLogicFilter())
         {
-            var (filter, getResult) = FilterFactory.GetLogicFilter(filterDocument.GetRootKey());
+            var (filter, getResult) = _filterFactory.GetLogicFilter(filterDocument.GetRootKey());
             if (getResult is not null)
             {
                 return getResult;
@@ -127,7 +125,7 @@ public class FilterService<T>(FilterOption<T>? option=null)
 
         if (filterDocument.IsRootSceneFilter())
         {
-            var (filter, getResult) = FilterFactory.GetSceneFilter(filterDocument.GetRootKey());
+            var (filter, getResult) = _filterFactory.GetSceneFilter(filterDocument.GetRootKey());
             if (getResult is not null)
             {
                 return getResult;
@@ -159,7 +157,7 @@ public class FilterService<T>(FilterOption<T>? option=null)
 
         if (filterDocument.IsRootLogicFilter())
         {
-            var (filter, getResult) = FilterFactory.GetLogicFilter(filterDocument.GetRootKey());
+            var (filter, getResult) = _filterFactory.GetLogicFilter(filterDocument.GetRootKey());
             if (getResult is not null)
             {
                 return getResult;
@@ -170,7 +168,7 @@ public class FilterService<T>(FilterOption<T>? option=null)
 
         if (filterDocument.IsRootSceneFilter())
         {
-            var (filter, getResult) = FilterFactory.GetSceneFilter(filterDocument.GetRootKey());
+            var (filter, getResult) = _filterFactory.GetSceneFilter(filterDocument.GetRootKey());
             if (getResult is not null)
             {
                 return getResult;
@@ -210,14 +208,14 @@ public class FilterService<T>(FilterOption<T>? option=null)
     {
         if (_filterOption.EnableFilterDocumentCache)
         {
-            return _filterDocuments.GetOrAdd(rawFilter, _ => new FilterDocument<T>(rawFilter, FilterFactory));
+            return _filterDocuments.GetOrAdd(rawFilter, _ => new FilterDocument<T>(rawFilter, _filterFactory));
         }
 
-        return new FilterDocument<T>(rawFilter, FilterFactory);
+        return new FilterDocument<T>(rawFilter, _filterFactory);
     }
 
     public Dictionary<string, SceneFilterInfo> GetSceneFilterInfos()
     {
-        return FilterFactory.GetSceneFilterInfos();
+        return _filterFactory.GetSceneFilterInfos();
     }
 }
