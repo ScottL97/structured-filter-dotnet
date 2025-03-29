@@ -126,7 +126,7 @@ public abstract class SceneFilter<T> : Filter<T>, ISceneFilter<T>
             if (IsCacheable)
             {
                 var matchTarget = await matchTargetGetter.GetAsync();
-                var (isMatched, isExists) = await _cache!.GetFilterResultCacheAsync(matchTarget, filterKv);
+                var (isMatched, isExists) = await _cache!.GetFilterResultCacheAsync(matchTarget, GetKey(), filterKv);
                 if (isExists)
                 {
                     if (isMatched)
@@ -145,12 +145,12 @@ public abstract class SceneFilter<T> : Filter<T>, ISceneFilter<T>
                 if (filterResult is null)
                 {
                     var matchTarget = await matchTargetGetter.GetAsync();
-                    await _cache!.SetFilterResultCacheAsync(matchTarget, filterKv, true);
+                    await _cache!.SetFilterResultCacheAsync(matchTarget, GetKey(), filterKv, true);
                 }
                 else if (filterResult.StatusCode == FilterStatusCode.NotMatched)
                 {
                     var matchTarget = await matchTargetGetter.GetAsync();
-                    await _cache!.SetFilterResultCacheAsync(matchTarget, filterKv, false);
+                    await _cache!.SetFilterResultCacheAsync(matchTarget, GetKey(), filterKv, false);
                 }
             }
 
@@ -166,7 +166,7 @@ public abstract class SceneFilter<T> : Filter<T>, ISceneFilter<T>
     {
         if (IsCacheable)
         {
-            var (isMatched, isExists) = await _cache!.GetFilterResultCacheAsync(matchTarget, filterKv);
+            var (isMatched, isExists) = await _cache!.GetFilterResultCacheAsync(matchTarget, GetKey(), filterKv);
             if (isExists)
             {
                 if (isMatched)
@@ -184,11 +184,11 @@ public abstract class SceneFilter<T> : Filter<T>, ISceneFilter<T>
         {
             if (filterResult is null)
             {
-                await _cache!.SetFilterResultCacheAsync(matchTarget, filterKv, true);
+                await _cache!.SetFilterResultCacheAsync(matchTarget, GetKey(), filterKv, true);
             }
             else if (filterResult.StatusCode == FilterStatusCode.NotMatched)
             {
-                await _cache!.SetFilterResultCacheAsync(matchTarget, filterKv, false);
+                await _cache!.SetFilterResultCacheAsync(matchTarget, GetKey(), filterKv, false);
             }
         }
 

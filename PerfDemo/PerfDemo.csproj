@@ -3,14 +3,13 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <DebugSymbols>true</DebugSymbols>
+        <Optimize>false</Optimize>
     </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\StructuredFilter\StructuredFilter.csproj" />
         <ProjectReference Include="..\SceneFilterModelsExample\SceneFilterModelsExample.csproj" />
     </ItemGroup>
-
 </Project>

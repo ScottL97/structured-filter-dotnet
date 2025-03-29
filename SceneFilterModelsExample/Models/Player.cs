@@ -1,4 +1,7 @@
-﻿namespace StructuredFilter.Test.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace SceneFilterModelsExample.Models;
 
 public class User
 {

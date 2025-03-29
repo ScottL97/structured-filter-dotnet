@@ -18,6 +18,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredFilter.Builder", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredFilter.Builder.Test", "StructuredFilter.Builder.Test\StructuredFilter.Builder.Test.csproj", "{5B85269F-FEA3-4F4B-A49F-46772E3E4EF0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerfDemo", "PerfDemo\PerfDemo.csproj", "{AB8D51B3-0014-461D-9AB5-A541EA401A31}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SceneFilterModelsExample", "SceneFilterModelsExample\SceneFilterModelsExample.csproj", "{02F1C720-898C-4B00-99E7-4A9D1ED91B6C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,5 +64,13 @@ Global
 		{5B85269F-FEA3-4F4B-A49F-46772E3E4EF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B85269F-FEA3-4F4B-A49F-46772E3E4EF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B85269F-FEA3-4F4B-A49F-46772E3E4EF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB8D51B3-0014-461D-9AB5-A541EA401A31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB8D51B3-0014-461D-9AB5-A541EA401A31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB8D51B3-0014-461D-9AB5-A541EA401A31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB8D51B3-0014-461D-9AB5-A541EA401A31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02F1C720-898C-4B00-99E7-4A9D1ED91B6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02F1C720-898C-4B00-99E7-4A9D1ED91B6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02F1C720-898C-4B00-99E7-4A9D1ED91B6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02F1C720-898C-4B00-99E7-4A9D1ED91B6C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

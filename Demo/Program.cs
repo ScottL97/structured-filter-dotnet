@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
-using Demo;
-using Demo.Scenes;
+using SceneFilterModelsExample.Models;
+using SceneFilterModelsExample.Scenes;
 using StructuredFilter;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Utils;

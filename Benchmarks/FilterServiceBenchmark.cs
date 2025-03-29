@@ -1,6 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
-using Demo;
-using Demo.Scenes;
+using SceneFilterModelsExample.Models;
+using SceneFilterModelsExample.Scenes;
 using StructuredFilter;
 
 namespace Benchmarks;
@@ -10,6 +10,12 @@ public class FilterServiceBenchmark
 {
     private readonly FilterService<Player> _filterServiceWithCache = new FilterService<Player>().WithSceneFilters([
         f => new PidFilter(f),
+        f => new UserNameFilter(f),
+        f => new PlayerGameVersionFilter(f)
+    ]);
+    
+    private readonly FilterService<Player> _filterServiceWithCacheAndFilterCache = new FilterService<Player>().WithSceneFilters([
+        f => new SceneFilterModelsExample.Scenes.CacheableScenes.PidFilter(f),
         f => new UserNameFilter(f),
         f => new PlayerGameVersionFilter(f)
     ]);
@@ -61,6 +67,15 @@ public class FilterServiceBenchmark
         foreach (var rawFilter in _rawFilters)
         {
             await _filterServiceWithCache.MatchAsync(rawFilter, _player);
+        }
+    }
+
+    [Benchmark]
+    public async Task FilterServiceWithCacheAndFilterCache()
+    {
+        foreach (var rawFilter in _rawFilters)
+        {
+            await _filterServiceWithCacheAndFilterCache.MatchAsync(rawFilter, _player);
         }
     }
 

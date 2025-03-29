@@ -1,8 +1,10 @@
-﻿using StructuredFilter.Filters;
+﻿using System.Threading.Tasks;
+using SceneFilterModelsExample.Models;
+using StructuredFilter.Filters;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.SceneFilters.Scenes;
 
-namespace Demo.Scenes;
+namespace SceneFilterModelsExample.Scenes;
 
 [FilterLabel("玩家 ID")]
 [FilterKey("pid")]

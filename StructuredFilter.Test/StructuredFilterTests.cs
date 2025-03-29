@@ -1,15 +1,15 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using SceneFilterModelsExample.Models;
+using SceneFilterModelsExample.Scenes;
+using SceneFilterModelsExample.Scenes.CacheableScenes;
 using StructuredFilter.Filters;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.Common.FilterTypes;
 using StructuredFilter.Filters.SceneFilters;
-using StructuredFilter.Test.Models;
-using StructuredFilter.Test.Scenes;
-using StructuredFilter.Test.Scenes.CacheableScenes;
 using StructuredFilter.Utils;
 using Exception = System.Exception;
-using PidFilter = StructuredFilter.Test.Scenes.PidFilter;
+using PidFilter = SceneFilterModelsExample.Scenes.PidFilter;
 
 namespace StructuredFilter.Test;
 
@@ -69,7 +69,7 @@ public class StructuredFilterTests
     ]);
 
     private readonly FilterService<Player> _cacheableFilterService = new FilterService<Player>().WithSceneFilters([
-        f => new Scenes.CacheableScenes.PidFilter(f),
+        f => new SceneFilterModelsExample.Scenes.CacheableScenes.PidFilter(f),
         f => new UserNameFilter(f),
         f => new PlayerGameVersionFilter(f)
     ]);
@@ -247,7 +247,7 @@ public class StructuredFilterTests
             {
                 FilterJson = "{\"$and\":{}}",
                 StatusCode = FilterStatusCode.Invalid,
-                ErrorMessage = "FilterFactory of type StructuredFilter.Test.Models.Player 子 filter $and 不存在",
+                ErrorMessage = "FilterFactory of type SceneFilterModelsExample.Models.Player 子 filter $and 不存在",
                 FailedKeyPath = ["$and"],
             },
             new ()
@@ -338,7 +338,7 @@ public class StructuredFilterTests
         Assert.Multiple(() =>
         {
             Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.NotMatched));
-            Assert.That(e.Message, Does.StartWith("matchTarget StructuredFilter.Test.Models.Player of type StructuredFilter.Test.Models.Player not match {pid: FilterKv { Key = $in, Value = [1001,1002] }} according to cache"));
+            Assert.That(e.Message, Does.StartWith("matchTarget SceneFilterModelsExample.Models.Player of type SceneFilterModelsExample.Models.Player not match {pid: FilterKv { Key = $in, Value = [1001,1002] }} according to cache"));
             Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(new List<string> { "pid" }));
         });
     }
@@ -513,7 +513,7 @@ public class StructuredFilterTests
                 FilterJson = "{\"rank\": {\"$range\": [50, 100]}}",
                 StatusCode = FilterStatusCode.NotMatched,
                 ErrorMessage = "matchTarget 10 of type System.Double not match {$range: [50,100]}",
-                ErrorMessage2 = "matchTarget StructuredFilter.Test.Models.Player of type StructuredFilter.Test.Models.Player not match {rank: FilterKv { Key = $range, Value = [50,100] }} according to cache",
+                ErrorMessage2 = "matchTarget SceneFilterModelsExample.Models.Player of type SceneFilterModelsExample.Models.Player not match {rank: FilterKv { Key = $range, Value = [50,100] }} according to cache",
                 FailedKeyPath = ["rank", "$range"],
                 FailedKeyPath2 = ["rank"],
             },
@@ -521,7 +521,7 @@ public class StructuredFilterTests
             {
                 FilterJson = "{\"rank\": {\"$range\": [50, 100]}}",
                 StatusCode = FilterStatusCode.NotMatched,
-                ErrorMessage = "matchTarget StructuredFilter.Test.Models.Player of type StructuredFilter.Test.Models.Player not match {rank: FilterKv { Key = $range, Value = [50,100] }} according to cache",
+                ErrorMessage = "matchTarget SceneFilterModelsExample.Models.Player of type SceneFilterModelsExample.Models.Player not match {rank: FilterKv { Key = $range, Value = [50,100] }} according to cache",
                 FailedKeyPath = ["rank", "$range"],
                 FailedKeyPath2 = ["rank"],
             }
@@ -781,7 +781,7 @@ public class StructuredFilterTests
         Assert.Multiple(() =>
         {
             Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.Invalid));
-            Assert.That(e.Message, Does.StartWith("FilterFactory of type StructuredFilter.Test.Models.Player 子 filter not_found 不存在"));
+            Assert.That(e.Message, Does.StartWith("FilterFactory of type SceneFilterModelsExample.Models.Player 子 filter not_found 不存在"));
             Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(new List<string> { "not_found" }));
         });
         
@@ -790,7 +790,7 @@ public class StructuredFilterTests
         Assert.Multiple(() =>
         {
             Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.Invalid));
-            Assert.That(e.Message, Does.StartWith("FilterFactory of type StructuredFilter.Test.Models.Player 子 filter not_found 不存在"));
+            Assert.That(e.Message, Does.StartWith("FilterFactory of type SceneFilterModelsExample.Models.Player 子 filter not_found 不存在"));
             Assert.That(e.FailedKeyPath.Traverse().ToList(), Is.EqualTo(new List<string> { "not_found" }));
         });
     }

@@ -19,6 +19,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\StructuredFilter\StructuredFilter.csproj" />
+        <ProjectReference Include="..\SceneFilterModelsExample\SceneFilterModelsExample.csproj" />
     </ItemGroup>
 
     <ItemGroup>
