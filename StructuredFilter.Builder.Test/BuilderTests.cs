@@ -21,6 +21,10 @@ public class BuilderTests
         rawFilter = nameFilterBuilder.Ne("Tom").Build();
         Assert.That(rawFilter, Is.EqualTo("{\"userName\":{\"$ne\":\"Tom\"}}"));
         Console.WriteLine(rawFilter);
+        
+        rawFilter = nameFilterBuilder.In(["Tom", "Scott"]).Build();
+        Assert.That(rawFilter, Is.EqualTo("{\"userName\":{\"$in\":[\"Tom\",\"Scott\"]}}"));
+        Console.WriteLine(rawFilter);
 
         rawFilter = isMaleFilterBuilder.Eq(true).Build();
         Assert.That(rawFilter, Is.EqualTo("{\"isMale\":{\"$eq\":true}}"));

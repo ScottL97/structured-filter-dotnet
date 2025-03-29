@@ -7,9 +7,9 @@ public abstract class RangeValueBuilder<T>(T leftValue, T rightValue) : FilterBu
 {
     protected override void BuildValue(System.Text.StringBuilder sb)
     {
+        sb.Append('[');
         if (typeof(T) == typeof(string) || typeof(T) == typeof(Version))
         {
-            sb.Append('[');
             sb.Append('"');
             sb.Append(leftValue);
             sb.Append('"');
@@ -22,7 +22,6 @@ public abstract class RangeValueBuilder<T>(T leftValue, T rightValue) : FilterBu
             return;
         }
 
-        sb.Append('[');
         sb.Append(leftValue);
         sb.Append(',');
         sb.Append(rightValue);

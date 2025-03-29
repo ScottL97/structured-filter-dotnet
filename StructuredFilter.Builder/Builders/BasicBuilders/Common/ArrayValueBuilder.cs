@@ -8,6 +8,7 @@ public abstract class ArrayValueBuilder<T>(IEnumerable<T> values) : FilterBuilde
 {
     protected override void BuildValue(System.Text.StringBuilder sb)
     {
+        sb.Append('[');
         if (typeof(T) == typeof(string) || typeof(T) == typeof(Version))
         {
             foreach (var value in values)
@@ -18,6 +19,7 @@ public abstract class ArrayValueBuilder<T>(IEnumerable<T> values) : FilterBuilde
                 sb.Append(',');
             }
             sb.Remove(sb.Length - 1, 1);
+            sb.Append(']');
 
             return;
         }
@@ -28,5 +30,6 @@ public abstract class ArrayValueBuilder<T>(IEnumerable<T> values) : FilterBuilde
             sb.Append(',');
         }
         sb.Remove(sb.Length - 1, 1);
+        sb.Append(']');
     }
 }
