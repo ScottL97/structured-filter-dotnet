@@ -7,6 +7,10 @@ public abstract class Filter<T>
     protected string? KeyOverride { get; set; }
     protected string? LabelOverride { get; set; }
     protected string? BasicTypeOverride { get; set; }
+    
+    private string? KeyInAttribute { get; set; }
+    private string? LabelInAttribute { get; set; }
+    private string? BasicTypeInAttribute { get; set; }
 
     public string GetKey()
     {
@@ -15,12 +19,18 @@ public abstract class Filter<T>
             return KeyOverride;
         }
 
+        if (!string.IsNullOrEmpty(KeyInAttribute))
+        {
+            return KeyInAttribute;
+        }
+
         var keyAttribute = (FilterKey?)Attribute.GetCustomAttribute(GetType(), typeof(FilterKey));
         if (keyAttribute == null)
         {
             throw new FilterException(FilterStatusCode.Invalid, $"type {GetType()} FilterKey Attribute is missing", $"<{GetType()}>");
         }
-        return keyAttribute.Key;
+        KeyInAttribute = keyAttribute.Key;
+        return KeyInAttribute;
     }
 
     public string GetLabel()
@@ -29,9 +39,15 @@ public abstract class Filter<T>
         {
             return LabelOverride;
         }
+        
+        if (!string.IsNullOrEmpty(LabelInAttribute))
+        {
+            return LabelInAttribute;
+        }
 
         var labelAttribute = (FilterLabel?)Attribute.GetCustomAttribute(GetType(), typeof(FilterLabel));
-        return labelAttribute != null ? labelAttribute.Label : "UNKNOWN_LABEL";
+        LabelInAttribute = labelAttribute != null ? labelAttribute.Label : "UNKNOWN_LABEL";
+        return LabelInAttribute;
     }
 
     public string GetBasicType()
@@ -41,11 +57,17 @@ public abstract class Filter<T>
             return BasicTypeOverride;
         }
 
+        if (!string.IsNullOrEmpty(BasicTypeInAttribute))
+        {
+            return BasicTypeInAttribute;
+        }
+
         var typeAttribute = (FilterType?)Attribute.GetCustomAttribute(GetType(), typeof(FilterType));
         if (typeAttribute == null)
         {
             throw new FilterException(FilterStatusCode.Invalid, $"type {GetType()} FilterType Attribute is missing", $"<{GetType()}>");
         }
-        return typeAttribute.Type;
+        BasicTypeInAttribute = typeAttribute.Type;
+        return BasicTypeInAttribute;
     }
 }

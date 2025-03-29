@@ -10,10 +10,10 @@ BenchmarkDotNet v0.14.0, Windows 11 (10.0.22631.5039/23H2/2023Update/SunValley3)
 ```
 | Method                                  | Mean        | Error     | StdDev    | Gen0   | Allocated |
 |---------------------------------------- |------------:|----------:|----------:|-------:|----------:|
-| FilterServiceWithCache                  | 12,708.5 ns | 253.43 ns | 237.06 ns | 0.8545 |   11642 B |
-| FilterServiceWithCacheAndFilterCache    | 16,744.0 ns | 334.56 ns | 410.87 ns | 1.0376 |   14154 B |
-| FilterServiceWithoutCache               | 31,130.7 ns | 505.13 ns | 447.79 ns | 3.2959 |   43933 B |
-| FilterServiceOneMatchOkWithCache        |    137.7 ns |   2.77 ns |   6.70 ns | 0.0317 |     416 B |
-| FilterServiceOneMatchAndOkWithCache     |    421.1 ns |   8.25 ns |  11.29 ns | 0.0787 |    1032 B |
-| FilterServiceOneMatchFailedWithCache    |  3,551.2 ns |  47.25 ns |  44.20 ns | 0.2022 |    2664 B |
-| FilterServiceOneMatchAndFailedWithCache |  4,768.9 ns |  93.18 ns | 121.16 ns | 0.2899 |    3944 B |
+| FilterServiceWithCache                  |  6,819.5 ns | 116.76 ns | 204.50 ns | 0.6714 |    8993 B |
+| FilterServiceWithCacheAndFilterCache    |  6,759.2 ns |  94.05 ns |  83.37 ns | 0.7324 |    9633 B |
+| FilterServiceWithoutCache               | 25,342.3 ns | 499.54 ns | 762.85 ns | 3.0518 |   41285 B |
+| FilterServiceOneMatchOkWithCache        |    139.1 ns |   2.49 ns |   2.33 ns | 0.0317 |     416 B |
+| FilterServiceOneMatchAndOkWithCache     |    416.1 ns |   6.85 ns |   6.40 ns | 0.0787 |    1032 B |
+| FilterServiceOneMatchFailedWithCache    |    385.3 ns |   7.66 ns |  16.49 ns | 0.0863 |    1128 B |
+| FilterServiceOneMatchAndFailedWithCache |    630.7 ns |  12.57 ns |  28.37 ns | 0.1459 |    1912 B |
