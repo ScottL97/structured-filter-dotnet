@@ -1,19 +1,19 @@
 ```
 
-BenchmarkDotNet v0.14.0, Windows 11 (10.0.22631.5039/23H2/2023Update/SunValley3)
-12th Gen Intel Core i7-12700F, 1 CPU, 20 logical and 12 physical cores
-.NET SDK 9.0.104
-  [Host]     : .NET 9.0.3 (9.0.325.11113), X64 RyuJIT AVX2
-  DefaultJob : .NET 9.0.3 (9.0.325.11113), X64 RyuJIT AVX2
+BenchmarkDotNet v0.14.0, Windows 11 (10.0.26100.4351)
+Unknown processor
+.NET SDK 9.0.202
+  [Host]     : .NET 9.0.3 (9.0.325.11113), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+  DefaultJob : .NET 9.0.3 (9.0.325.11113), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
 
 
 ```
-| Method                                  | Mean        | Error     | StdDev    | Gen0   | Allocated |
-|---------------------------------------- |------------:|----------:|----------:|-------:|----------:|
-| FilterServiceWithCache                  |  6,819.5 ns | 116.76 ns | 204.50 ns | 0.6714 |    8993 B |
-| FilterServiceWithCacheAndFilterCache    |  6,759.2 ns |  94.05 ns |  83.37 ns | 0.7324 |    9633 B |
-| FilterServiceWithoutCache               | 25,342.3 ns | 499.54 ns | 762.85 ns | 3.0518 |   41285 B |
-| FilterServiceOneMatchOkWithCache        |    139.1 ns |   2.49 ns |   2.33 ns | 0.0317 |     416 B |
-| FilterServiceOneMatchAndOkWithCache     |    416.1 ns |   6.85 ns |   6.40 ns | 0.0787 |    1032 B |
-| FilterServiceOneMatchFailedWithCache    |    385.3 ns |   7.66 ns |  16.49 ns | 0.0863 |    1128 B |
-| FilterServiceOneMatchAndFailedWithCache |    630.7 ns |  12.57 ns |  28.37 ns | 0.1459 |    1912 B |
+| Method                                  | Mean         | Error      | StdDev     | Gen0   | Allocated |
+|---------------------------------------- |-------------:|-----------:|-----------:|-------:|----------:|
+| FilterServiceWithCache                  |  4,553.84 ns |  21.678 ns |  20.278 ns | 0.1678 |    8992 B |
+| FilterServiceWithCacheAndFilterCache    |  4,595.76 ns |  31.501 ns |  29.466 ns | 0.1831 |    9632 B |
+| FilterServiceWithoutCache               | 18,315.18 ns | 131.014 ns | 122.550 ns | 0.7935 |   41281 B |
+| FilterServiceOneMatchOkWithCache        |     97.97 ns |   0.479 ns |   0.448 ns | 0.0082 |     416 B |
+| FilterServiceOneMatchAndOkWithCache     |    295.83 ns |   1.266 ns |   1.123 ns | 0.0205 |    1032 B |
+| FilterServiceOneMatchFailedWithCache    |    265.44 ns |   0.992 ns |   0.928 ns | 0.0224 |    1128 B |
+| FilterServiceOneMatchAndFailedWithCache |    448.82 ns |   1.931 ns |   1.807 ns | 0.0377 |    1912 B |
