@@ -4,4 +4,4 @@ using StructuredFilter.Builder.Builders.SceneBuilders;
 namespace StructuredFilter.Builder.Test.SceneBuilders;
 
 [FilterBuilderKey("pid")]
-public class PidFilterBuilder : NumberSceneBuilder;
+public class PidFilterBuilder : LongSceneBuilder;

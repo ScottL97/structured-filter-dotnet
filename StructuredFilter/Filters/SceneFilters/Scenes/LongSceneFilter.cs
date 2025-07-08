@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 using StructuredFilter.Filters.Common;
 using StructuredFilter.Filters.Common.FilterTypes;
@@ -6,16 +6,16 @@ using StructuredFilter.Utils;
 
 namespace StructuredFilter.Filters.SceneFilters.Scenes;
 
-[FilterType(FilterBasicType.Number)]
-public abstract class NumberSceneFilter<T>(FilterFactory<T> filterFactory, NumberSceneFilter<T>.NumberValueGetter numberValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
+[FilterType(FilterBasicType.Long)]
+public abstract class LongSceneFilter<T>(FilterFactory<T> filterFactory, LongSceneFilter<T>.LongValueGetter longValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
-    protected delegate Task<double> NumberValueGetter(T? matchTarget);
+    protected delegate Task<long> LongValueGetter(T? matchTarget);
 
     public override FilterException? Valid(JsonElement filterElement)
     {
         var checkResult = filterElement.AssertIsValidObject(this, property =>
         {
-            var (filter, getResult) = filterFactory.NumberFilterFactory.Get(property.Name);
+            var (filter, getResult) = filterFactory.LongFilterFactory.Get(property.Name);
             return getResult ?? filter.Valid(property.Value);
         });
         return checkResult?.PrependFailedKey(GetKey());
@@ -23,35 +23,35 @@ public abstract class NumberSceneFilter<T>(FilterFactory<T> filterFactory, Numbe
 
     protected override async ValueTask<FilterException?> LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
     {
-        var (filter, getResult) = filterFactory.NumberFilterFactory.Get(filterKv.Key);
+        var (filter, getResult) = filterFactory.LongFilterFactory.Get(filterKv.Key);
         if (getResult is not null)
         {
             return getResult.PrependFailedKey(GetKey());
         }
-        var filterResult = await filter.LazyMatchAsync(filterKv.Value, new LazyObjectGetter<double>(async _ =>
+        var filterResult = await filter.LazyMatchAsync(filterKv.Value, new LazyObjectGetter<long>(async _ =>
         {
             var matchTarget = await matchTargetGetter.GetAsync();
-            return (await numberValueGetter(matchTarget), true);
+            return (await longValueGetter(matchTarget), true);
         }, matchTargetGetter.Args));
         return filterResult?.PrependFailedKey(GetKey());
     }
 
     protected override async ValueTask<FilterException?> MatchInternalAsync(FilterKv filterKv, T matchTarget)
     {
-        var (filter, getResult) = filterFactory.NumberFilterFactory.Get(filterKv.Key);
+        var (filter, getResult) = filterFactory.LongFilterFactory.Get(filterKv.Key);
         if (getResult is not null)
         {
             return getResult.PrependFailedKey(GetKey());
         }
-        var filterResult = filter.Match(filterKv.Value, await numberValueGetter(matchTarget));
+        var filterResult = filter.Match(filterKv.Value, await longValueGetter(matchTarget));
         return filterResult?.PrependFailedKey(GetKey());
     }
 }
 
-public class DynamicNumberSceneFilter<T> : NumberSceneFilter<T>
+public class DynamicLongSceneFilter<T> : LongSceneFilter<T>
 {
-    public DynamicNumberSceneFilter(FilterFactory<T> filterFactory,
-        FilterOption<T>.GetDynamicNumberSceneFilterValueAsync dynamicSceneFilterValueGetter,
+    public DynamicLongSceneFilter(FilterFactory<T> filterFactory,
+        FilterOption<T>.GetDynamicLongSceneFilterValueAsync dynamicSceneFilterValueGetter,
         string key,
         bool cacheable = false,
         string? label = null,

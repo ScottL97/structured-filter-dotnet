@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -8,13 +7,14 @@ namespace StructuredFilter.Filters.Common.FilterTypes;
 public static class FilterBasicType
 {
     public const string Bool = "BOOL";
-    public const string Number = "NUMBER";
+    public const string Double = "DOUBLE";
+    public const string Long = "LONG";
     public const string String = "STRING";
     public const string Version = "VERSION";
 
     public static bool IsValidFilterBasicType(string t)
     {
-        return t is Bool or Number or String or Version;
+        return t is Bool or Double or Long or String or Version;
     }
 }
 
@@ -108,6 +108,7 @@ public static class FilterTypeChecker
             { } stringType when stringType == typeof(string) => (string.CompareOrdinal(element.GetString(),
                 other.ToString()), null),
             { } doubleType when doubleType == typeof(double) => (element.GetDouble().CompareTo(other.GetDouble()), null),
+            { } longType when longType == typeof(long) => (element.GetInt64().CompareTo(other.GetInt64()), null),
             { } versionType when versionType == typeof(Version) => (Version.Parse(element.GetString()!)
                 .CompareTo(Version.Parse(element.GetString()!)), null),
             _ => (0, new FilterException(FilterStatusCode.Invalid,
@@ -121,6 +122,7 @@ public static class FilterTypeChecker
         {
             { } stringType when stringType == typeof(string) => (element.GetString()!.CompareTo(matchTarget), null),
             { } doubleType when doubleType == typeof(double) => (element.GetDouble().CompareTo(matchTarget), null),
+            { } longType when longType == typeof(long) => (element.GetInt64().CompareTo(matchTarget), null),
             { } versionType when versionType == typeof(Version) => (Version.Parse(element.GetString()!).CompareTo(matchTarget), null),
             _ => (0, new FilterException(FilterStatusCode.Invalid,
                 $"unsupported filter basic type {typeof(T)} for compare", filter.GetKey()))
@@ -217,7 +219,7 @@ public static class FilterTypeChecker
             return element.AssertIsValidBool(filter);
         }
 
-        if (typeof(T) == typeof(double))
+        if (typeof(T) == typeof(double) || typeof(T) == typeof(long))
         {
             return element.AssertIsValidNumber(filter);
         }

@@ -18,6 +18,11 @@ public static class Matcher
             return element.GetDouble() - Unsafe.As<T, double>(ref marchTarget) == 0;
         }
 
+        if (typeof(T) == typeof(long))
+        {
+            return element.GetInt64() == Unsafe.As<T, long>(ref marchTarget);
+        }
+
         if (typeof(T) == typeof(string))
         {
             return element.ValueEquals(Unsafe.As<T, string>(ref marchTarget));
@@ -38,6 +43,11 @@ public static class Matcher
             return Unsafe.As<T, double>(ref marchTarget) >= element.GetDouble();
         }
 
+        if (typeof(T) == typeof(long))
+        {
+            return Unsafe.As<T, long>(ref marchTarget) >= element.GetInt64();
+        }
+
         if (typeof(T) == typeof(Version))
         {
             return Version.Parse(element.GetString()!).CompareTo(marchTarget) <= 0;
@@ -51,6 +61,11 @@ public static class Matcher
         if (typeof(T) == typeof(double))
         {
             return Unsafe.As<T, double>(ref marchTarget) > element.GetDouble();
+        }
+
+        if (typeof(T) == typeof(long))
+        {
+            return Unsafe.As<T, long>(ref marchTarget) > element.GetInt64();
         }
 
         if (typeof(T) == typeof(Version))
@@ -68,6 +83,11 @@ public static class Matcher
             return Unsafe.As<T, double>(ref marchTarget) <= element.GetDouble();
         }
 
+        if (typeof(T) == typeof(long))
+        {
+            return Unsafe.As<T, long>(ref marchTarget) <= element.GetInt64();
+        }
+
         if (typeof(T) == typeof(Version))
         {
             return Version.Parse(element.GetString()!).CompareTo(marchTarget) >= 0;
@@ -81,6 +101,11 @@ public static class Matcher
         if (typeof(T) == typeof(double))
         {
             return Unsafe.As<T, double>(ref marchTarget) < element.GetDouble();
+        }
+
+        if (typeof(T) == typeof(long))
+        {
+            return Unsafe.As<T, long>(ref marchTarget) < element.GetInt64();
         }
 
         if (typeof(T) == typeof(Version))
@@ -101,6 +126,11 @@ public static class Matcher
         if (typeof(T) == typeof(double))
         {
             return element.GetDouble() - Unsafe.As<T, double>(ref marchTarget) != 0;
+        }
+
+        if (typeof(T) == typeof(long))
+        {
+            return element.GetInt64() != Unsafe.As<T, long>(ref marchTarget);
         }
 
         if (typeof(T) == typeof(string))

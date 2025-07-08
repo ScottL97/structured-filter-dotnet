@@ -21,12 +21,14 @@ public class FilterOption<T>
     /// Methods to obtain dynamic filters' values from match target according to the filter key
     /// </summary>
     public delegate Task<bool> GetDynamicBoolSceneFilterValueAsync(T? matchTarget, string filterKey);
-    public delegate Task<double> GetDynamicNumberSceneFilterValueAsync(T? matchTarget, string filterKey);
+    public delegate Task<double> GetDynamicDoubleSceneFilterValueAsync(T? matchTarget, string filterKey);
+    public delegate Task<long> GetDynamicLongSceneFilterValueAsync(T? matchTarget, string filterKey);
     public delegate Task<string> GetDynamicStringSceneFilterValueAsync(T? matchTarget, string filterKey);
     public delegate Task<Version> GetDynamicVersionSceneFilterValueAsync(T? matchTarget, string filterKey);
 
     public GetDynamicBoolSceneFilterValueAsync? DynamicBoolSceneFilterValueGetter { get; set; } = null;
-    public GetDynamicNumberSceneFilterValueAsync? DynamicNumberSceneFilterValueGetter { get; set; } = null;
+    public GetDynamicDoubleSceneFilterValueAsync? DynamicDoubleSceneFilterValueGetter { get; set; } = null;
+    public GetDynamicLongSceneFilterValueAsync? DynamicLongSceneFilterValueGetter { get; set; } = null;
     public GetDynamicStringSceneFilterValueAsync? DynamicStringSceneFilterValueGetter { get; set; } = null;
     public GetDynamicVersionSceneFilterValueAsync? DynamicVersionSceneFilterValueGetter { get; set; } = null;
 
@@ -47,7 +49,8 @@ public static class FilterOptionsExtension
     public static bool IsDynamicSceneFilterValueGetterConfigured<T>(this FilterOption<T> filterOption)
     {
         return filterOption.DynamicBoolSceneFilterValueGetter is not null ||
-               filterOption.DynamicNumberSceneFilterValueGetter is not null ||
+               filterOption.DynamicDoubleSceneFilterValueGetter is not null ||
+               filterOption.DynamicLongSceneFilterValueGetter is not null ||
                filterOption.DynamicStringSceneFilterValueGetter is not null ||
                filterOption.DynamicVersionSceneFilterValueGetter is not null;
     }

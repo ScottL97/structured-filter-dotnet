@@ -46,7 +46,7 @@ var players = new[]
 [FilterLabel("玩家 ID")]
 [FilterKey("pid")]
 public class PidFilter(FilterFactory<Player> filterFactory)
-    : NumberSceneFilter<Player>(filterFactory, player => player.Pid);
+    : LongSceneFilter<Player>(filterFactory, player => player.Pid);
 
 [FilterLabel("用户名")]
 [FilterKey("userName")]
@@ -101,6 +101,7 @@ foreach (var filteredPlayer in filteredList)
 * Range is a StructuredFilter Array containing two elements, the first element of the Array is less than or equal to the second element, and the elements need to be one of the following types:
   * string
   * double
+  * long
   * Version
 * The value of Range uses a closed interval, that is, the match is successful when it is greater than or equal to the first element and less than or equal to the second element.
 * Examples: `[1, 2]`、`["a", "z"]`, `[Version.Parse("1.0.0"), Version.Parse("1.6.0")]`
@@ -126,18 +127,31 @@ foreach (var filteredPlayer in filteredList)
 | $eq | bool       | Match successfully when the value of the matching object and filter value are equal     | `{"isMale": {"$eq": true}}` |
 | $ne | bool       | Match successfully when the value of the matching object and filter value are not equal | `{"isMale": {"$ne": true}}` |
 
-#### Number filters
+#### Double filters
 
 | Key    | Value Type   | Description                                                                                                                                                                                   | Filter Examples                  |
 |--------|--------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------|
-| $eq    | double       | Match successfully when the value of the matching object and filter value are equal                                                                                                           | `{"age": {"$eq": 20}}`           |
-| $ne    | double       | Match successfully when the value of the matching object and filter value are not equal                                                                                                       | `{"age": {"$ne": 20}}`           |
-| $in    | double Array | Match successfully when the value of the matching object is equal to any of the filter values                                                                                                 | `{"age": {"$in": [20, 21, 22]}}` |
-| $lt    | double       | Match successfully when the value of the matching object is less than the filter value                                                                                                        | `{"age": {"$lt": 20}}`           |
-| $gt    | double       | Match successfully when the value of the matching object is greater than the filter value                                                                                                     | `{"age": {"$gt": 20}}`           |
-| $le    | double       | Match successfully when the value of the matching object is less than or equal to the filter value                                                                                            | `{"age": {"$le": 20}}`           |
-| $ge    | double       | Match successfully when the value of the matching object is greater than or equal to the filter value                                                                                         | `{"age": {"$ge": 20}}`           |
-| $range | double Range | Match successfully when the value of the matching object is greater than or equal to the first element in the filter values and less than or equal to the second element in the filter values | `{"age": {"$range": [20, 30]}}`  |
+| $eq    | double       | Match successfully when the value of the matching object and filter value are equal                                                                                                           | `{"score": {"$eq": 20.5}}`       |
+| $ne    | double       | Match successfully when the value of the matching object and filter value are not equal                                                                                                       | `{"score": {"$ne": 20.5}}`       |
+| $in    | double Array | Match successfully when the value of the matching object is equal to any of the filter values                                                                                                 | `{"score": {"$in": [20.5, 21.0, 22.5]}}` |
+| $lt    | double       | Match successfully when the value of the matching object is less than the filter value                                                                                                        | `{"score": {"$lt": 20.5}}`       |
+| $gt    | double       | Match successfully when the value of the matching object is greater than the filter value                                                                                                     | `{"score": {"$gt": 20.5}}`       |
+| $le    | double       | Match successfully when the value of the matching object is less than or equal to the filter value                                                                                            | `{"score": {"$le": 20.5}}`       |
+| $ge    | double       | Match successfully when the value of the matching object is greater than or equal to the filter value                                                                                         | `{"score": {"$ge": 20.5}}`       |
+| $range | double Range | Match successfully when the value of the matching object is greater than or equal to the first element in the filter values and less than or equal to the second element in the filter values | `{"score": {"$range": [20.0, 30.0]}}` |
+
+#### Long filters
+
+| Key    | Value Type | Description                                                                                                                                                                                   | Filter Examples                  |
+|--------|------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------|
+| $eq    | long       | Match successfully when the value of the matching object and filter value are equal                                                                                                           | `{"pid": {"$eq": 1000}}`         |
+| $ne    | long       | Match successfully when the value of the matching object and filter value are not equal                                                                                                       | `{"pid": {"$ne": 1000}}`         |
+| $in    | long Array | Match successfully when the value of the matching object is equal to any of the filter values                                                                                                 | `{"pid": {"$in": [1000, 1001, 1002]}}` |
+| $lt    | long       | Match successfully when the value of the matching object is less than the filter value                                                                                                        | `{"pid": {"$lt": 1000}}`         |
+| $gt    | long       | Match successfully when the value of the matching object is greater than the filter value                                                                                                     | `{"pid": {"$gt": 1000}}`         |
+| $le    | long       | Match successfully when the value of the matching object is less than or equal to the filter value                                                                                            | `{"pid": {"$le": 1000}}`         |
+| $ge    | long       | Match successfully when the value of the matching object is greater than or equal to the filter value                                                                                         | `{"pid": {"$ge": 1000}}`         |
+| $range | long Range | Match successfully when the value of the matching object is greater than or equal to the first element in the filter values and less than or equal to the second element in the filter values | `{"pid": {"$range": [1000, 2000]}}` |
 
 #### String filters
 
@@ -167,7 +181,8 @@ foreach (var filteredPlayer in filteredList)
 * Scene filters are defined by the user and can be nested as subordinates of Logic filters or superior of Basic filters.
 * The following abstract classes of scene filters are provided to simplify the writing of your scene filters:
   * BoolSceneFilter
-  * NumberSceneFilter
+  * DoubleSceneFilter
+  * LongSceneFilter
   * StringSceneFilter
   * VersionSceneFilter
 
@@ -182,7 +197,7 @@ foreach (var filteredPlayer in filteredList)
 [FilterKey("pid")]
 [Cacheable]
 public class PidFilter(FilterFactory<Player> filterFactory)
-    : NumberSceneFilter<Player>(filterFactory, player => Task.FromResult((double)player.Pid));
+    : LongSceneFilter<Player>(filterFactory, player => Task.FromResult(player.Pid));
 ```
 
 * Implement IFilterResultCache:
@@ -223,7 +238,7 @@ public class PlayerFilterCache : IFilterResultCache<Player>
 [FilterKey("pid")]
 [Cacheable]
 public class PidFilter(FilterFactory<Player> filterFactory)
-    : NumberSceneFilter<Player>(filterFactory, player => Task.FromResult((double)player.Pid), new PlayerFilterCache());
+    : LongSceneFilter<Player>(filterFactory, player => Task.FromResult(player.Pid), new PlayerFilterCache());
 ```
 
 ## FilterValidator

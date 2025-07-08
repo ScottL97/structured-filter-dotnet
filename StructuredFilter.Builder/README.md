@@ -10,7 +10,7 @@ Filter JSON builder for [StructuredFilter](https://www.nuget.org/packages/Struct
 [FilterLabel("玩家 ID")]
 [FilterKey("pid")]
 public class PidFilter(FilterFactory<Player> filterFactory)
-    : NumberSceneFilter<Player>(filterFactory, player => player.Pid);
+    : LongSceneFilter<Player>(filterFactory, player => player.Pid);
 
 [FilterLabel("用户名")]
 [FilterKey("userName")]

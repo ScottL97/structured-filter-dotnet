@@ -39,7 +39,8 @@ public interface IBasicFilterFactory<T> : IFilterFactory<T>
 
 public class FilterFactory<T> : IRootFilterFactory<T>
 {
-    public readonly NumberFilterFactory NumberFilterFactory;
+    public readonly DoubleFilterFactory DoubleFilterFactory;
+    public readonly LongFilterFactory LongFilterFactory;
     public readonly BoolFilterFactory BoolFilterFactory;
     public readonly StringFilterFactory StringFilterFactory;
     public readonly VersionFilterFactory VersionFilterFactory;
@@ -54,15 +55,25 @@ public class FilterFactory<T> : IRootFilterFactory<T>
             new AndFilter<T>(_sceneFilterFactory),
             new OrFilter<T>(_sceneFilterFactory)
         ]);
-        NumberFilterFactory = new NumberFilterFactory([
-            new NumberInFilter(),
-            new NumberEqFilter(),
-            new NumberNeFilter(),
-            new GreaterOrEqualFilter(),
-            new LessOrEqualFilter(),
-            new GreaterThanFilter(),
-            new LessThanFilter(),
-            new NumberRangeFilter()
+        DoubleFilterFactory = new DoubleFilterFactory([
+            new DoubleInFilter(),
+            new DoubleEqFilter(),
+            new DoubleNeFilter(),
+            new DoubleGreaterOrEqualFilter(),
+            new DoubleLessOrEqualFilter(),
+            new DoubleGreaterThanFilter(),
+            new DoubleLessThanFilter(),
+            new DoubleRangeFilter()
+        ]);
+        LongFilterFactory = new LongFilterFactory([
+            new LongInFilter(),
+            new LongEqFilter(),
+            new LongNeFilter(),
+            new LongGreaterOrEqualFilter(),
+            new LongLessOrEqualFilter(),
+            new LongGreaterThanFilter(),
+            new LongLessThanFilter(),
+            new LongRangeFilter()
         ]);
         BoolFilterFactory = new BoolFilterFactory([
             new BoolEqFilter(),
@@ -100,7 +111,8 @@ public class FilterFactory<T> : IRootFilterFactory<T>
     public FilterFactory<T> WithDynamicFilter(DynamicFilter<T> df,
         bool enableOverride,
         Func<T?, Task<bool>>? boolValueGetter = null,
-        Func<T?, Task<double>>? numberValueGetter = null,
+        Func<T?, Task<double>>? doubleValueGetter = null,
+        Func<T?, Task<long>>? longValueGetter = null,
         Func<T?, Task<string>>? stringValueGetter = null,
         Func<T?, Task<Version>>? versionValueGetter = null)
     {
@@ -114,19 +126,21 @@ public class FilterFactory<T> : IRootFilterFactory<T>
             var filter = df.BasicType switch
             {
                 FilterBasicType.Bool => (ISceneFilter<T>)new DynamicBoolSceneFilter<T>(this,
-                    (player, filterKey) => boolValueGetter(player), df.Key, df.Cacheable, df.Label, df.Cache),
-                FilterBasicType.Number => (ISceneFilter<T>)new DynamicNumberSceneFilter<T>(this,
-                    (player, filterKey) => numberValueGetter(player), df.Key, df.Cacheable, df.Label, df.Cache),
+                    (player, filterKey) => boolValueGetter!(player), df.Key, df.Cacheable, df.Label, df.Cache),
+                FilterBasicType.Double => (ISceneFilter<T>)new DynamicDoubleSceneFilter<T>(this,
+                    (player, filterKey) => doubleValueGetter!(player), df.Key, df.Cacheable, df.Label, df.Cache),
+                FilterBasicType.Long => (ISceneFilter<T>)new DynamicLongSceneFilter<T>(this,
+                    (player, filterKey) => longValueGetter!(player), df.Key, df.Cacheable, df.Label, df.Cache),
                 FilterBasicType.String => (ISceneFilter<T>)new DynamicStringSceneFilter<T>(this,
-                    (player, filterKey) => stringValueGetter(player), df.Key, df.Cacheable, df.Label, df.Cache),
+                    (player, filterKey) => stringValueGetter!(player), df.Key, df.Cacheable, df.Label, df.Cache),
                 FilterBasicType.Version => (ISceneFilter<T>)new DynamicVersionSceneFilter<T>(this,
-                    (player, filterKey) => versionValueGetter(player), df.Key, df.Cacheable, df.Label, df.Cache),
+                    (player, filterKey) => versionValueGetter!(player), df.Key, df.Cacheable, df.Label, df.Cache),
                 _ => throw new FilterException(FilterStatusCode.OptionError, $"unknown filter basic type {df.BasicType} with key {df.Key}")
             };
 
             return WithSceneFilter(filter, enableOverride);
         }
-        catch (NullReferenceException e)
+        catch (NullReferenceException)
         {
             throw new FilterException(FilterStatusCode.Invalid, $"valueGetter for {df.BasicType} is null");
         }
@@ -169,8 +183,10 @@ public class FilterFactory<T> : IRootFilterFactory<T>
             {
                 FilterBasicType.Bool => (ISceneFilter<T>)new DynamicBoolSceneFilter<T>(this,
                     filterOption.DynamicBoolSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
-                FilterBasicType.Number => (ISceneFilter<T>)new DynamicNumberSceneFilter<T>(this,
-                    filterOption.DynamicNumberSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
+                FilterBasicType.Double => (ISceneFilter<T>)new DynamicDoubleSceneFilter<T>(this,
+                    filterOption.DynamicDoubleSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
+                FilterBasicType.Long => (ISceneFilter<T>)new DynamicLongSceneFilter<T>(this,
+                    filterOption.DynamicLongSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
                 FilterBasicType.String => (ISceneFilter<T>)new DynamicStringSceneFilter<T>(this,
                     filterOption.DynamicStringSceneFilterValueGetter!, f.Key, f.Cacheable, f.Label, f.Cache),
                 FilterBasicType.Version => (ISceneFilter<T>)new DynamicVersionSceneFilter<T>(this,
@@ -217,11 +233,18 @@ public class FilterFactory<T> : IRootFilterFactory<T>
                         return new OperatorInfo { Label = boolFilter.GetLabel(), Value = boolFilter.GetKey() };
                     })
                     .ToArray(),
-                FilterBasicType.Number => NumberFilterFactory.GetAll()
+                FilterBasicType.Double => DoubleFilterFactory.GetAll()
                     .Select(kv =>
                     {
-                        var numberFilter = kv.Value;
-                        return new OperatorInfo { Label = numberFilter.GetLabel(), Value = numberFilter.GetKey() };
+                        var doubleFilter = kv.Value;
+                        return new OperatorInfo { Label = doubleFilter.GetLabel(), Value = doubleFilter.GetKey() };
+                    })
+                    .ToArray(),
+                FilterBasicType.Long => LongFilterFactory.GetAll()
+                    .Select(kv =>
+                    {
+                        var longFilter = kv.Value;
+                        return new OperatorInfo { Label = longFilter.GetLabel(), Value = longFilter.GetKey() };
                     })
                     .ToArray(),
                 FilterBasicType.String => StringFilterFactory.GetAll()

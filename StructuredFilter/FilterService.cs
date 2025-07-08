@@ -33,11 +33,12 @@ public class FilterService<T>(FilterFactory<T>? filterFactor=null, FilterOption<
 
     public FilterService<T> WithDynamicFilter(DynamicFilter<T> df,
         Func<T?, Task<bool>>? boolValueGetter = null,
-        Func<T?, Task<double>>? numberValueGetter = null,
+        Func<T?, Task<double>>? doubleValueGetter = null,
+        Func<T?, Task<long>>? longValueGetter = null,
         Func<T?, Task<string>>? stringValueGetter = null,
         Func<T?, Task<Version>>? versionValueGetter = null)
     {
-        _filterFactory.WithDynamicFilter(df, _filterOption.IsSceneFilterOverrideAllowed, boolValueGetter, numberValueGetter, stringValueGetter, versionValueGetter);
+        _filterFactory.WithDynamicFilter(df, _filterOption.IsSceneFilterOverrideAllowed, boolValueGetter, doubleValueGetter, longValueGetter, stringValueGetter, versionValueGetter);
         return this;
     }
 
