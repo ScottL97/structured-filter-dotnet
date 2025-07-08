@@ -21,7 +21,7 @@ public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSce
         return checkResult?.PrependFailedKey(GetKey());
     }
 
-    protected override async Task<FilterException?> LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
+    protected override async ValueTask<FilterException?> LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
     {
         var (filter, getResult) = filterFactory.BoolFilterFactory.Get(filterKv.Key);
         if (getResult is not null)
@@ -36,7 +36,7 @@ public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSce
         return filterResult?.PrependFailedKey(GetKey());
     }
 
-    protected override async Task<FilterException?> MatchInternalAsync(FilterKv filterKv, T matchTarget)
+    protected override async ValueTask<FilterException?> MatchInternalAsync(FilterKv filterKv, T matchTarget)
     {
         var (filter, getResult) = filterFactory.BoolFilterFactory.Get(filterKv.Key);
         if (getResult is not null)

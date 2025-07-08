@@ -21,7 +21,7 @@ public abstract class NumberSceneFilter<T>(FilterFactory<T> filterFactory, Numbe
         return checkResult?.PrependFailedKey(GetKey());
     }
 
-    protected override async Task<FilterException?> LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
+    protected override async ValueTask<FilterException?> LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
     {
         var (filter, getResult) = filterFactory.NumberFilterFactory.Get(filterKv.Key);
         if (getResult is not null)
@@ -36,7 +36,7 @@ public abstract class NumberSceneFilter<T>(FilterFactory<T> filterFactory, Numbe
         return filterResult?.PrependFailedKey(GetKey());
     }
 
-    protected override async Task<FilterException?> MatchInternalAsync(FilterKv filterKv, T matchTarget)
+    protected override async ValueTask<FilterException?> MatchInternalAsync(FilterKv filterKv, T matchTarget)
     {
         var (filter, getResult) = filterFactory.NumberFilterFactory.Get(filterKv.Key);
         if (getResult is not null)

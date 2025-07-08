@@ -29,7 +29,7 @@ public class LogicFilterFactory<T> : ILogicFilterFactory<T>
             return (logicFilter, null);
         }
 
-        return (null, this.CreateSubFilterNotFoundException(key));
+        return (null!, this.CreateSubFilterNotFoundException(key));
     }
 
     public Dictionary<string, IFilter<T>> GetAll()
@@ -57,7 +57,7 @@ public class AndFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>,
         return checkResult?.PrependFailedKey(GetKey());
     }
 
-    public async Task<FilterException?> LazyMatchAsync(FilterArray filterArray, LazyObjectGetter<T> matchTargetGetter)
+    public async ValueTask<FilterException?> LazyMatchAsync(FilterArray filterArray, LazyObjectGetter<T> matchTargetGetter)
     {
         foreach (var filterObject in filterArray.FilterObjects)
         {
@@ -77,7 +77,7 @@ public class AndFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>,
         return null;
     }
 
-    public async Task<FilterException?> MatchAsync(FilterArray filterArray, T matchTarget)
+    public async ValueTask<FilterException?> MatchAsync(FilterArray filterArray, T matchTarget)
     {
         foreach (var filterObject in filterArray.FilterObjects)
         {
@@ -112,7 +112,7 @@ public class OrFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>, 
         return checkResult?.PrependFailedKey(GetKey());
     }
 
-    public async Task<FilterException?> LazyMatchAsync(FilterArray filterArray, LazyObjectGetter<T> matchTargetGetter)
+    public async ValueTask<FilterException?> LazyMatchAsync(FilterArray filterArray, LazyObjectGetter<T> matchTargetGetter)
     {
         var failedKeyPath = new List<Tree<string>>();
         foreach (var filterObject in filterArray.FilterObjects)
@@ -136,7 +136,7 @@ public class OrFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>, 
         return new FilterException(FilterStatusCode.NotMatched, "no filters match $or", GetKey()).AppendFailedKeys(failedKeyPath);
     }
 
-    public async Task<FilterException?> MatchAsync(FilterArray filterArray, T matchTarget)
+    public async ValueTask<FilterException?> MatchAsync(FilterArray filterArray, T matchTarget)
     {
         var failedKeyPath = new List<Tree<string>>();
         foreach (var filterObject in filterArray.FilterObjects)

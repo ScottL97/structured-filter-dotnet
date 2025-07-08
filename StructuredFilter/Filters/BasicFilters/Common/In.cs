@@ -16,7 +16,7 @@ internal class InFilter<T>: Filter<T>, IBasicFilter<T>
         return element.AssertIsValidArray(this);
     }
 
-    public async Task<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
+    public async ValueTask<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {

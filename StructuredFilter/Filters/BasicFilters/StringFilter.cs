@@ -55,7 +55,7 @@ internal class StringRegexFilter : Filter<string>, IStringFilter
         return element.AssertIsValidRegex(this);
     }
 
-    public async Task<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<string> matchTargetGetter)
+    public async ValueTask<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<string> matchTargetGetter)
     {
         try
         {

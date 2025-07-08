@@ -119,7 +119,7 @@ public abstract class SceneFilter<T> : Filter<T>, ISceneFilter<T>
         return IsCacheable;
     }
 
-    public async Task<FilterException?> LazyMatchAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
+    public async ValueTask<FilterException?> LazyMatchAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {
@@ -162,7 +162,7 @@ public abstract class SceneFilter<T> : Filter<T>, ISceneFilter<T>
         }
     }
 
-    public async Task<FilterException?> MatchAsync(FilterKv filterKv, T matchTarget)
+    public async ValueTask<FilterException?> MatchAsync(FilterKv filterKv, T matchTarget)
     {
         if (IsCacheable)
         {
@@ -195,7 +195,7 @@ public abstract class SceneFilter<T> : Filter<T>, ISceneFilter<T>
         return filterResult;
     }
 
-    protected abstract Task<FilterException?> LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter);
-    protected abstract Task<FilterException?> MatchInternalAsync(FilterKv filterKv, T matchTarget);
+    protected abstract ValueTask<FilterException?> LazyMatchInternalAsync(FilterKv filterKv, LazyObjectGetter<T> matchTargetGetter);
+    protected abstract ValueTask<FilterException?> MatchInternalAsync(FilterKv filterKv, T matchTarget);
     public abstract FilterException? Valid(JsonElement element);
 }

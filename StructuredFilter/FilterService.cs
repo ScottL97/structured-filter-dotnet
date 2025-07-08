@@ -95,7 +95,7 @@ public class FilterService<T>(FilterFactory<T>? filterFactor=null, FilterOption<
         "filter root is neither a logic filter nor a scene filter");
 
     // 不匹配时不会抛出异常而是返回匹配结果
-    public async Task<FilterException> MatchAsync(string rawFilter, T matchTarget)
+    public async ValueTask<FilterException> MatchAsync(string rawFilter, T matchTarget)
     {
         if (string.IsNullOrWhiteSpace(rawFilter))
         {
@@ -138,7 +138,7 @@ public class FilterService<T>(FilterFactory<T>? filterFactor=null, FilterOption<
     }
 
     // 不匹配时不会抛出异常而是返回匹配结果
-    public async Task<FilterException> LazyMatchAsync(string rawFilter, LazyObjectGetter<T> matchTargetGetter)
+    public async ValueTask<FilterException> LazyMatchAsync(string rawFilter, LazyObjectGetter<T> matchTargetGetter)
     {
         if (string.IsNullOrWhiteSpace(rawFilter))
         {
@@ -181,7 +181,7 @@ public class FilterService<T>(FilterFactory<T>? filterFactor=null, FilterOption<
     }
 
     // 不匹配时抛出异常
-    public async Task MustMatchAsync(string rawFilter, T matchTarget)
+    public async ValueTask MustMatchAsync(string rawFilter, T matchTarget)
     {
         var filterResult = await MatchAsync(rawFilter, matchTarget);
         if (filterResult.StatusCode == FilterStatusCode.Ok)
@@ -193,7 +193,7 @@ public class FilterService<T>(FilterFactory<T>? filterFactor=null, FilterOption<
     }
 
     // 不匹配时抛出异常
-    public async Task LazyMustMatchAsync(string rawFilter, LazyObjectGetter<T> matchTargetGetter)
+    public async ValueTask LazyMustMatchAsync(string rawFilter, LazyObjectGetter<T> matchTargetGetter)
     {
         var filterResult = await LazyMatchAsync(rawFilter, matchTargetGetter);
         if (filterResult.StatusCode == FilterStatusCode.Ok)

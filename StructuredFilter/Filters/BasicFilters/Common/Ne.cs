@@ -15,7 +15,7 @@ internal class NeFilter<T>: Filter<T>, IBasicFilter<T>
         return element.AssertIsRightElementType(this);
     }
 
-    public async Task<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
+    public async ValueTask<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {

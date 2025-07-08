@@ -8,12 +8,12 @@ Unknown processor
 
 
 ```
-| Method                                  | Mean         | Error     | StdDev    | Gen0   | Allocated |
-|---------------------------------------- |-------------:|----------:|----------:|-------:|----------:|
-| FilterServiceWithCache                  |  4,458.61 ns | 10.979 ns |  9.732 ns | 0.1678 |    8736 B |
-| FilterServiceWithCacheAndFilterCache    |  4,533.27 ns | 23.769 ns | 22.234 ns | 0.1831 |    9376 B |
-| FilterServiceWithoutCache               | 17,230.56 ns | 82.953 ns | 77.595 ns | 0.7324 |   37985 B |
-| FilterServiceOneMatchOkWithCache        |     98.86 ns |  0.567 ns |  0.530 ns | 0.0082 |     416 B |
-| FilterServiceOneMatchAndOkWithCache     |    293.54 ns |  2.140 ns |  2.002 ns | 0.0196 |    1000 B |
-| FilterServiceOneMatchFailedWithCache    |    257.20 ns |  1.617 ns |  1.434 ns | 0.0224 |    1128 B |
-| FilterServiceOneMatchAndFailedWithCache |    446.23 ns |  2.820 ns |  2.638 ns | 0.0372 |    1880 B |
+| Method                                  | Mean        | Error    | StdDev   | Gen0   | Allocated |
+|---------------------------------------- |------------:|---------:|---------:|-------:|----------:|
+| FilterServiceWithCache                  |  4,690.3 ns | 18.15 ns | 16.09 ns | 0.1526 |    7872 B |
+| FilterServiceWithCacheAndFilterCache    |  4,648.6 ns | 18.65 ns | 17.45 ns | 0.1678 |    8584 B |
+| FilterServiceWithoutCache               | 17,452.4 ns | 53.52 ns | 47.44 ns | 0.7324 |   37121 B |
+| FilterServiceOneMatchOkWithCache        |    100.9 ns |  0.29 ns |  0.27 ns | 0.0068 |     344 B |
+| FilterServiceOneMatchAndOkWithCache     |    302.3 ns |  1.37 ns |  1.29 ns | 0.0181 |     928 B |
+| FilterServiceOneMatchFailedWithCache    |    277.6 ns |  4.65 ns |  4.35 ns | 0.0181 |     912 B |
+| FilterServiceOneMatchAndFailedWithCache |    444.8 ns |  1.32 ns |  1.23 ns | 0.0315 |    1592 B |

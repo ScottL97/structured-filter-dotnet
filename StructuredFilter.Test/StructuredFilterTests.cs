@@ -325,7 +325,7 @@ public class StructuredFilterTests
         }, args);
 
         var e = Assert.ThrowsAsync<FilterException>(() =>
-            _filterService.LazyMustMatchAsync(filterJson, playerGetter));
+            _filterService.LazyMustMatchAsync(filterJson, playerGetter).AsTask());
         Assert.Multiple(() =>
         {
             Assert.That(e.StatusCode, Is.EqualTo(FilterStatusCode.MatchError));
@@ -567,7 +567,7 @@ public class StructuredFilterTests
         foreach (var expect in expects)
         {
             var e = Assert.ThrowsAsync<FilterException>(() =>
-                filterService.LazyMustMatchAsync(expect.FilterJson, Player1Getter));
+                filterService.LazyMustMatchAsync(expect.FilterJson, Player1Getter).AsTask());
             PrintFilterException(e);
             Assert.Multiple(() =>
             {
