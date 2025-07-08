@@ -9,7 +9,7 @@ namespace StructuredFilter.Filters.SceneFilters.Scenes;
 [FilterType(FilterBasicType.Long)]
 public abstract class LongSceneFilter<T>(FilterFactory<T> filterFactory, LongSceneFilter<T>.LongValueGetter longValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
-    protected delegate Task<long> LongValueGetter(T? matchTarget);
+    protected delegate ValueTask<long> LongValueGetter(T? matchTarget);
 
     public override FilterException? Valid(JsonElement filterElement)
     {

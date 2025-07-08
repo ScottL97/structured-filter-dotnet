@@ -9,7 +9,7 @@ namespace StructuredFilter.Filters.SceneFilters.Scenes;
 [FilterType(FilterBasicType.Bool)]
 public abstract class BoolSceneFilter<T>(FilterFactory<T> filterFactory, BoolSceneFilter<T>.BoolValueGetter boolValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
-    protected delegate Task<bool> BoolValueGetter(T? matchTarget);
+    protected delegate ValueTask<bool> BoolValueGetter(T? matchTarget);
 
     public override FilterException? Valid(JsonElement filterElement)
     {

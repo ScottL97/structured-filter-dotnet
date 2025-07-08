@@ -9,4 +9,4 @@ namespace StructuredFilter.AspNetCore.Demo.Scenes;
 [FilterLabel("玩家游戏版本")]
 [FilterKey("playerGameVersion")]
 public class PlayerGameVersionFilter(FilterFactory<Player> filterFactory)
-    : VersionSceneFilter<Player>(filterFactory, player => Task.FromResult(player.GameVersion));
+    : VersionSceneFilter<Player>(filterFactory, player => ValueTask.FromResult(player.GameVersion));

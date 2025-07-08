@@ -20,11 +20,11 @@ public class FilterOption<T>
     /// <summary>
     /// Methods to obtain dynamic filters' values from match target according to the filter key
     /// </summary>
-    public delegate Task<bool> GetDynamicBoolSceneFilterValueAsync(T? matchTarget, string filterKey);
-    public delegate Task<double> GetDynamicDoubleSceneFilterValueAsync(T? matchTarget, string filterKey);
-    public delegate Task<long> GetDynamicLongSceneFilterValueAsync(T? matchTarget, string filterKey);
-    public delegate Task<string> GetDynamicStringSceneFilterValueAsync(T? matchTarget, string filterKey);
-    public delegate Task<Version> GetDynamicVersionSceneFilterValueAsync(T? matchTarget, string filterKey);
+    public delegate ValueTask<bool> GetDynamicBoolSceneFilterValueAsync(T? matchTarget, string filterKey);
+    public delegate ValueTask<double> GetDynamicDoubleSceneFilterValueAsync(T? matchTarget, string filterKey);
+    public delegate ValueTask<long> GetDynamicLongSceneFilterValueAsync(T? matchTarget, string filterKey);
+    public delegate ValueTask<string> GetDynamicStringSceneFilterValueAsync(T? matchTarget, string filterKey);
+    public delegate ValueTask<Version> GetDynamicVersionSceneFilterValueAsync(T? matchTarget, string filterKey);
 
     public GetDynamicBoolSceneFilterValueAsync? DynamicBoolSceneFilterValueGetter { get; set; } = null;
     public GetDynamicDoubleSceneFilterValueAsync? DynamicDoubleSceneFilterValueGetter { get; set; } = null;
@@ -35,7 +35,7 @@ public class FilterOption<T>
     /// <summary>
     /// Method to obtain dynamic filters
     /// </summary>
-    public delegate Task<DynamicFilter<T>[]> GetDynamicFiltersAsync();
+    public delegate ValueTask<DynamicFilter<T>[]> GetDynamicFiltersAsync();
     public GetDynamicFiltersAsync? DynamicFiltersGetter { get; set; } = null;
 }
 

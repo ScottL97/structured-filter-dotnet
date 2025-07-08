@@ -10,7 +10,7 @@ namespace StructuredFilter.Filters.SceneFilters.Scenes;
 [FilterType(FilterBasicType.Version)]
 public abstract class VersionSceneFilter<T>(FilterFactory<T> filterFactory, VersionSceneFilter<T>.VersionValueGetter versionValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
-    protected delegate Task<Version> VersionValueGetter(T? matchTarget);
+    protected delegate ValueTask<Version> VersionValueGetter(T? matchTarget);
 
     public override FilterException? Valid(JsonElement filterElement)
     {

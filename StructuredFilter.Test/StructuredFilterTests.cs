@@ -443,15 +443,15 @@ public class StructuredFilterTests
         var cache = new PlayerFilterCache();
         var testCacheableDynamicFilterService = await new FilterService<Player>(option: new FilterOption<Player>
         {
-            DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter<Player>[]
+            DynamicFiltersGetter = () => ValueTask.FromResult(new DynamicFilter<Player>[]
             {
-                new ("rank", FilterBasicType.Double, true, "玩家等级", cache)
+                new ("rank", FilterBasicType.Long, true, "玩家等级", cache)
             }),
-            DynamicDoubleSceneFilterValueGetter = (player, filterKey) =>
+            DynamicLongSceneFilterValueGetter = (player, filterKey) =>
             {
                 if (filterKey == "rank")
                 {
-                    return Task.FromResult(10.0);
+                    return ValueTask.FromResult(10L);
                 }
 
                 throw new Exception($"player dynamic key {filterKey} not found");
@@ -502,15 +502,15 @@ public class StructuredFilterTests
         var cache = new PlayerFilterCache();
         var testCacheableDynamicFilterService = await new FilterService<Player>(option: new FilterOption<Player>
         {
-            DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter<Player>[]
+            DynamicFiltersGetter = () => ValueTask.FromResult(new DynamicFilter<Player>[]
             {
-                new ("rank", FilterBasicType.Double, true, "玩家等级", cache)
+                new ("rank", FilterBasicType.Long, true, "玩家等级", cache)
             }),
-            DynamicDoubleSceneFilterValueGetter = (player, filterKey) =>
+            DynamicLongSceneFilterValueGetter = (player, filterKey) =>
             {
                 if (filterKey == "rank")
                 {
-                    return Task.FromResult(10.0);
+                    return ValueTask.FromResult(10L);
                 }
 
                 throw new Exception($"player dynamic key {filterKey} not found");
@@ -527,21 +527,21 @@ public class StructuredFilterTests
             {
                 FilterJson = "{\"rank\": {\"$regex\": \"^A\"}}",
                 StatusCode = FilterStatusCode.Invalid,
-                ErrorMessage = "FilterFactory of type System.Double 子 filter $regex 不存在",
+                ErrorMessage = "FilterFactory of type System.Int64 子 filter $regex 不存在",
                 FailedKeyPath = ["rank", "$regex"],
             },
             new()
             {
                 FilterJson = "{\"rank\": {\"$regex\": \"^A\"}}",
                 StatusCode = FilterStatusCode.Invalid,
-                ErrorMessage = "FilterFactory of type System.Double 子 filter $regex 不存在",
+                ErrorMessage = "FilterFactory of type System.Int64 子 filter $regex 不存在",
                 FailedKeyPath = ["rank", "$regex"],
             },
             new()
             {
                 FilterJson = "{\"rank\": {\"$range\": [50, 100]}}",
                 StatusCode = FilterStatusCode.NotMatched,
-                ErrorMessage = "matchTarget 10 of type System.Double not match {$range: [50,100]}",
+                ErrorMessage = "matchTarget 10 of type System.Int64 not match {$range: [50,100]}",
                 ErrorMessage2 = "matchTarget SceneFilterModelsExample.Models.Player of type SceneFilterModelsExample.Models.Player not match {rank: FilterKv { Key = $range, Value = [50,100] }} according to cache",
                 FailedKeyPath = ["rank", "$range"],
                 FailedKeyPath2 = ["rank"],
@@ -635,15 +635,15 @@ public class StructuredFilterTests
     {
         var testDynamicFilterService = await new FilterService<Player>(option: new FilterOption<Player>
         {
-            DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter<Player>[]
+            DynamicFiltersGetter = () => ValueTask.FromResult(new DynamicFilter<Player>[]
             {
-                new ("rank", FilterBasicType.Double, Label: "玩家等级")
+                new ("rank", FilterBasicType.Long, Label: "玩家等级")
             }),
-            DynamicDoubleSceneFilterValueGetter = (player, filterKey) =>
+            DynamicLongSceneFilterValueGetter = (player, filterKey) =>
             {
                 if (filterKey == "rank")
                 {
-                    return Task.FromResult(10.0);
+                    return ValueTask.FromResult(10L);
                 }
 
                 throw new Exception($"player dynamic key {filterKey} not found");
@@ -656,7 +656,7 @@ public class StructuredFilterTests
 
         // add DynamicFilter
         testDynamicFilterService.WithDynamicFilter(new DynamicFilter<Player>("groupName",
-            FilterBasicType.String, Label: "群组名"), stringValueGetter: _ => Task.FromResult("group-A"));
+            FilterBasicType.String, Label: "群组名"), stringValueGetter: _ => ValueTask.FromResult("group-A"));
 
         var sceneFilterInfos = JsonSerializer.Serialize(testDynamicFilterService.GetSceneFilterInfos(), new JsonSerializerOptions
         {
@@ -665,7 +665,7 @@ public class StructuredFilterTests
         });
 
         Console.WriteLine(WhitespaceRegex.Replace(sceneFilterInfos, ""));
-        Assert.That(WhitespaceRegex.Replace(sceneFilterInfos, ""), Is.EqualTo("{\"pid\":{\"label\":\"玩家ID\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"LONG\"},\"userName\":{\"label\":\"用户名\",\"logics\":[{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"匹配正则表达式\",\"value\":\"$regex\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"}],\"type\":\"STRING\"},\"playerGameVersion\":{\"label\":\"玩家游戏版本\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"VERSION\"},\"rank\":{\"label\":\"玩家等级\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"DOUBLE\"},\"groupName\":{\"label\":\"群组名\",\"logics\":[{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"匹配正则表达式\",\"value\":\"$regex\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"}],\"type\":\"STRING\"}}"));
+        Assert.That(WhitespaceRegex.Replace(sceneFilterInfos, ""), Is.EqualTo("{\"pid\":{\"label\":\"玩家ID\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"LONG\"},\"userName\":{\"label\":\"用户名\",\"logics\":[{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"匹配正则表达式\",\"value\":\"$regex\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"}],\"type\":\"STRING\"},\"playerGameVersion\":{\"label\":\"玩家游戏版本\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"VERSION\"},\"rank\":{\"label\":\"玩家等级\",\"logics\":[{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"大于\",\"value\":\"$gt\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"},{\"label\":\"小于等于\",\"value\":\"$le\"},{\"label\":\"大于等于\",\"value\":\"$ge\"},{\"label\":\"小于\",\"value\":\"$lt\"}],\"type\":\"LONG\"},\"groupName\":{\"label\":\"群组名\",\"logics\":[{\"label\":\"等于\",\"value\":\"$eq\"},{\"label\":\"不等于\",\"value\":\"$ne\"},{\"label\":\"属于\",\"value\":\"$in\"},{\"label\":\"匹配正则表达式\",\"value\":\"$regex\"},{\"label\":\"在此范围（包含两端值）\",\"value\":\"$range\"}],\"type\":\"STRING\"}}"));
 
         string[] filterJsons =
         [
@@ -683,15 +683,15 @@ public class StructuredFilterTests
     {
         var testDynamicFilterService = await new FilterService<Player>(option: new FilterOption<Player>
         {
-            DynamicFiltersGetter = () => Task.FromResult(new DynamicFilter<Player>[]
+            DynamicFiltersGetter = () => ValueTask.FromResult(new DynamicFilter<Player>[]
             {
-                new ("rank", FilterBasicType.Double, Label: "玩家等级")
+                new ("rank", FilterBasicType.Long, Label: "玩家等级")
             }),
-            DynamicDoubleSceneFilterValueGetter = (player, filterKey) =>
+            DynamicLongSceneFilterValueGetter = (player, filterKey) =>
             {
                 if (filterKey == "rank")
                 {
-                    return Task.FromResult((double)10);
+                    return ValueTask.FromResult(10L);
                 }
 
                 throw new Exception($"player dynamic key {filterKey} not found");
@@ -708,7 +708,7 @@ public class StructuredFilterTests
             {
                 FilterJson = "{\"rank\": {\"$gt\": 20}}",
                 StatusCode = FilterStatusCode.NotMatched,
-                ErrorMessage = "matchTarget 10 of type System.Double not match {$gt: 20}",
+                ErrorMessage = "matchTarget 10 of type System.Int64 not match {$gt: 20}",
                 FailedKeyPath = ["rank", "$gt"],
             },
             new()
@@ -722,7 +722,7 @@ public class StructuredFilterTests
             {
                 FilterJson = "{\"rank\": {\"wrong_key\": 100}}",
                 StatusCode = FilterStatusCode.Invalid,
-                ErrorMessage = "FilterFactory of type System.Double 子 filter wrong_key 不存在",
+                ErrorMessage = "FilterFactory of type System.Int64 子 filter wrong_key 不存在",
                 FailedKeyPath = ["rank", "wrong_key"],
             }
         ];

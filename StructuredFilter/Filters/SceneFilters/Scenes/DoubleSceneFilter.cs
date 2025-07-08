@@ -9,7 +9,7 @@ namespace StructuredFilter.Filters.SceneFilters.Scenes;
 [FilterType(FilterBasicType.Double)]
 public abstract class DoubleSceneFilter<T>(FilterFactory<T> filterFactory, DoubleSceneFilter<T>.DoubleValueGetter doubleValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
-    protected delegate Task<double> DoubleValueGetter(T? matchTarget);
+    protected delegate ValueTask<double> DoubleValueGetter(T? matchTarget);
 
     public override FilterException? Valid(JsonElement filterElement)
     {

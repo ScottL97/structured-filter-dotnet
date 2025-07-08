@@ -10,4 +10,4 @@ namespace StructuredFilter.AspNetCore.Demo.Scenes.CacheableScenes;
 [FilterKey("pid")]
 [Cacheable]
 public class PidFilter(FilterFactory<Player> filterFactory)
-    : LongSceneFilter<Player>(filterFactory, player => Task.FromResult(player.Pid), new PlayerFilterCache());
+    : LongSceneFilter<Player>(filterFactory, player => ValueTask.FromResult(player.Pid), new PlayerFilterCache());

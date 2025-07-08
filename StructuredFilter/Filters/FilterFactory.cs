@@ -110,11 +110,11 @@ public class FilterFactory<T> : IRootFilterFactory<T>
 
     public FilterFactory<T> WithDynamicFilter(DynamicFilter<T> df,
         bool enableOverride,
-        Func<T?, Task<bool>>? boolValueGetter = null,
-        Func<T?, Task<double>>? doubleValueGetter = null,
-        Func<T?, Task<long>>? longValueGetter = null,
-        Func<T?, Task<string>>? stringValueGetter = null,
-        Func<T?, Task<Version>>? versionValueGetter = null)
+        Func<T?, ValueTask<bool>>? boolValueGetter = null,
+        Func<T?, ValueTask<double>>? doubleValueGetter = null,
+        Func<T?, ValueTask<long>>? longValueGetter = null,
+        Func<T?, ValueTask<string>>? stringValueGetter = null,
+        Func<T?, ValueTask<Version>>? versionValueGetter = null)
     {
         if (!FilterBasicType.IsValidFilterBasicType(df.BasicType))
         {

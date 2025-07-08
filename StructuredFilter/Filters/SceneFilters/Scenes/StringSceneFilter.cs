@@ -9,7 +9,7 @@ namespace StructuredFilter.Filters.SceneFilters.Scenes;
 [FilterType(FilterBasicType.String)]
 public abstract class StringSceneFilter<T>(FilterFactory<T> filterFactory, StringSceneFilter<T>.StringValueGetter stringValueGetter, IFilterResultCache<T>? cache=null) : SceneFilter<T>(cache)
 {
-    protected delegate Task<string> StringValueGetter(T? matchTarget);
+    protected delegate ValueTask<string> StringValueGetter(T? matchTarget);
 
     public override FilterException? Valid(JsonElement filterElement)
     {
