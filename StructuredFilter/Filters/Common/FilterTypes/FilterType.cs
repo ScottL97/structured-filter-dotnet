@@ -28,7 +28,7 @@ public static class FilterTypeChecker
             return filter.CreateFilterValueTypeMismatchException(element, JsonValueKind.Object);
         }
 
-        var kvCount = element.EnumerateObject().Count();
+        var kvCount = element.GetPropertyCount();
         if (kvCount != 1)
         {
             return new FilterException(FilterStatusCode.Invalid, $"对象键值对数需要为 1，{element} 有 {kvCount} 对键值对");
@@ -53,7 +53,7 @@ public static class FilterTypeChecker
             return filter.CreateWrongFilterValueTypeException(element, JsonValueKind.Array);
         }
 
-        var kvCount = element.EnumerateArray().Count();
+        var kvCount = element.GetArrayLength();
         if (kvCount == 0)
         {
             return new FilterException(FilterStatusCode.Invalid, $"array elements count should be more than 0, {typeof(IFilter<T>)} value {element.ToString()} has 0", filter.GetKey());
@@ -134,8 +134,7 @@ public static class FilterTypeChecker
             return filter.CreateFilterValueTypeMismatchException(element, JsonValueKind.Array, false);
         }
 
-        var kvCount = element.EnumerateArray().Count();
-        if (kvCount == 0)
+        if (element.GetArrayLength() == 0)
         {
             return new FilterException(FilterStatusCode.Invalid, $"{element} 数组元素个数不能为0");
         }

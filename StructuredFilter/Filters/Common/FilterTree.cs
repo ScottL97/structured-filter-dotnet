@@ -26,7 +26,7 @@ public class FilterTree
             throw new FilterException(FilterStatusCode.Invalid, $"无效的 filter 根节点类型：{root.ValueKind}", "<UNKNOWN>");
         }
 
-        var kvCount = root.EnumerateObject().Count();
+        var kvCount = root.GetPropertyCount();
         if (kvCount != 1)
         {
             throw new FilterException(FilterStatusCode.Invalid, $"对象键值对数需要为 1，但 filter 根节点对象 {root} 有 {kvCount} 对键值对", "<UNKNOWN>");

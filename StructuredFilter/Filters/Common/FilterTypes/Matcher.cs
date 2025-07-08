@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 namespace StructuredFilter.Filters.Common.FilterTypes;
@@ -9,17 +10,17 @@ public static class Matcher
     {
         if (typeof(T) == typeof(bool))
         {
-            return element.GetBoolean().Equals(marchTarget);
+            return element.GetBoolean() == Unsafe.As<T, bool>(ref marchTarget);
         }
 
         if (typeof(T) == typeof(double))
         {
-            return element.GetDouble().Equals(marchTarget);
+            return element.GetDouble() - Unsafe.As<T, double>(ref marchTarget) == 0;
         }
 
         if (typeof(T) == typeof(string))
         {
-            return element.GetString()!.Equals(marchTarget);
+            return element.ValueEquals(Unsafe.As<T, string>(ref marchTarget));
         }
 
         if (typeof(T) == typeof(Version))
@@ -34,7 +35,7 @@ public static class Matcher
     {
         if (typeof(T) == typeof(double))
         {
-            return element.GetDouble().CompareTo(marchTarget) <= 0;
+            return Unsafe.As<T, double>(ref marchTarget) >= element.GetDouble();
         }
 
         if (typeof(T) == typeof(Version))
@@ -44,14 +45,14 @@ public static class Matcher
 
         throw new FilterException(FilterStatusCode.Invalid, $"unsupported filter basic type {typeof(T)} for $ge", filter.GetKey());
     }
-    
+
     public static bool MatchGt<T>(this JsonElement element, IFilter<T> filter, T marchTarget)
     {
         if (typeof(T) == typeof(double))
         {
-            return element.GetDouble().CompareTo(marchTarget) < 0;
+            return Unsafe.As<T, double>(ref marchTarget) > element.GetDouble();
         }
-        
+
         if (typeof(T) == typeof(Version))
         {
             return Version.Parse(element.GetString()!).CompareTo(marchTarget) < 0;
@@ -59,14 +60,14 @@ public static class Matcher
 
         throw new FilterException(FilterStatusCode.Invalid, $"unsupported filter basic type {typeof(T)} for $gt", filter.GetKey());
     }
-    
+
     public static bool MatchLe<T>(this JsonElement element, IFilter<T> filter, T marchTarget)
     {
         if (typeof(T) == typeof(double))
         {
-            return element.GetDouble().CompareTo(marchTarget) >= 0;
+            return Unsafe.As<T, double>(ref marchTarget) <= element.GetDouble();
         }
-        
+
         if (typeof(T) == typeof(Version))
         {
             return Version.Parse(element.GetString()!).CompareTo(marchTarget) >= 0;
@@ -74,14 +75,14 @@ public static class Matcher
 
         throw new FilterException(FilterStatusCode.Invalid, $"unsupported filter basic type {typeof(T)} for $le", filter.GetKey());
     }
-    
+
     public static bool MatchLt<T>(this JsonElement element, IFilter<T> filter, T marchTarget)
     {
         if (typeof(T) == typeof(double))
         {
-            return element.GetDouble().CompareTo(marchTarget) > 0;
+            return Unsafe.As<T, double>(ref marchTarget) < element.GetDouble();
         }
-        
+
         if (typeof(T) == typeof(Version))
         {
             return Version.Parse(element.GetString()!).CompareTo(marchTarget) > 0;
@@ -89,24 +90,24 @@ public static class Matcher
 
         throw new FilterException(FilterStatusCode.Invalid, $"unsupported filter basic type {typeof(T)} for $lt", filter.GetKey());
     }
-    
+
     public static bool MatchNe<T>(this JsonElement element, IFilter<T> filter, T marchTarget)
     {
         if (typeof(T) == typeof(bool))
         {
-            return !element.GetBoolean().Equals(marchTarget);
+            return element.GetBoolean() != Unsafe.As<T, bool>(ref marchTarget);
         }
 
         if (typeof(T) == typeof(double))
         {
-            return !element.GetDouble().Equals(marchTarget);
+            return element.GetDouble() - Unsafe.As<T, double>(ref marchTarget) != 0;
         }
 
         if (typeof(T) == typeof(string))
         {
-            return !element.GetString()!.Equals(marchTarget);
+            return !element.ValueEquals(Unsafe.As<T, string>(ref marchTarget));
         }
-        
+
         if (typeof(T) == typeof(Version))
         {
             return !Version.Parse(element.GetString()!).Equals(marchTarget);
