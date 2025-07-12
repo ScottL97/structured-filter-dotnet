@@ -10,14 +10,29 @@ using StructuredFilter.Utils;
 
 namespace StructuredFilter;
 
-public class FilterService<T>(FilterFactory<T>? filterFactor=null, FilterOption<T>? option=null)
+public class FilterService<T>
 {
     public delegate ISceneFilter<T> SceneFilterCreator(FilterFactory<T> filterFactory);
 
     private readonly ConcurrentDictionary<string, FilterDocument<T>> _filterDocuments = new ();
 
-    private readonly FilterFactory<T> _filterFactory = filterFactor ?? new FilterFactory<T>();
-    private readonly FilterOption<T> _filterOption = option ?? new FilterOption<T>();
+    private readonly FilterFactory<T> _filterFactory;
+    private readonly FilterOption<T> _filterOption;
+
+    // 缓存委托以避免每次创建新的委托对象
+    private readonly Func<string, FilterDocument<T>> _createFilterDocument;
+
+    public FilterService(FilterFactory<T>? filterFactor=null, FilterOption<T>? option=null)
+    {
+        _filterFactory = filterFactor ?? new FilterFactory<T>();
+        _filterOption = option ?? new FilterOption<T>();
+        _createFilterDocument = CreateFilterDocument;
+    }
+
+    private FilterDocument<T> CreateFilterDocument(string rawFilter)
+    {
+        return new FilterDocument<T>(rawFilter, _filterFactory);
+    }
 
     public void MustValidFilter(string filter)
     {
@@ -215,7 +230,7 @@ public class FilterService<T>(FilterFactory<T>? filterFactor=null, FilterOption<
     {
         if (_filterOption.EnableFilterDocumentCache)
         {
-            return _filterDocuments.GetOrAdd(rawFilter, _ => new FilterDocument<T>(rawFilter, _filterFactory));
+            return _filterDocuments.GetOrAdd(rawFilter, _createFilterDocument);
         }
 
         return new FilterDocument<T>(rawFilter, _filterFactory);

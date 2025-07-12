@@ -16,17 +16,17 @@ internal class InFilter<T>: Filter<T>, IBasicFilter<T>
         return element.AssertIsValidArray(this);
     }
 
-    public async ValueTask<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
+    public async ValueTask<FilterException?> LazyMatchAsync(FilterValue filterValue, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {
             var matchTarget = await matchTargetGetter.GetAsync();
-            if (element.EnumerateArray().Any(e => e.MatchEq(this, matchTarget)))
+            if (filterValue.MatchIn(this, matchTarget))
             {
                 return null;
             }
 
-            return this.CreateNotMatchException(matchTarget, element.ToString());
+            return this.CreateNotMatchException(matchTarget, filterValue.ToString());
         }
         catch (LazyObjectGetException)
         {
@@ -34,13 +34,13 @@ internal class InFilter<T>: Filter<T>, IBasicFilter<T>
         }
     }
 
-    public FilterException? Match(JsonElement element, T matchTarget)
+    public FilterException? Match(FilterValue filterValue, T matchTarget)
     {
-        if (element.EnumerateArray().Any(e => e.MatchEq(this, matchTarget)))
+        if (filterValue.MatchIn(this, matchTarget))
         {
             return null;
         }
 
-        return this.CreateNotMatchException(matchTarget, element.ToString());
+        return this.CreateNotMatchException(matchTarget, filterValue.ToString());
     }
 }

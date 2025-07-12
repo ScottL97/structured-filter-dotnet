@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using static StructuredFilter.Filters.Common.FilterValue;
 
 namespace StructuredFilter.Filters.Common;
 
@@ -10,9 +12,9 @@ public readonly record struct FilterObject(
     FilterArray? FilterArray);
 
 public readonly record struct FilterArray(
-    IEnumerable<FilterObject> FilterObjects);
+    Lazy<FilterObject[]> FilterObjects);
 
-public readonly record struct FilterKv(string Key, JsonElement Value);
+public readonly record struct FilterKv(string Key, FilterValue Value);
 
 public class FilterTree
 {
@@ -64,11 +66,11 @@ public class FilterTree
         
         if (rootObject.Value.ValueKind == JsonValueKind.Array)
         {
-            filterTree.Root = new FilterObject(rootObject.Name, null, ParseFilterArray(rootObject));
+            filterTree.Root = new FilterObject(rootObject.Name, null, ParseFilterArray(rootObject, filterFactory));
         }
         else if (rootObject.Value.ValueKind == JsonValueKind.Object)
         {
-            filterTree.Root = new FilterObject(rootObject.Name, ParseFilterKv(rootObject), null);
+            filterTree.Root = new FilterObject(rootObject.Name, ParseFilterKv(rootObject, filterFactory), null);
         }
         else
         {
@@ -78,19 +80,79 @@ public class FilterTree
         return filterTree;
     }
 
-    private static FilterArray ParseFilterArray(JsonProperty rootObject)
+    private static FilterArray ParseFilterArray<T>(JsonProperty rootObject, FilterFactory<T> filterFactory)
     {
-        return new FilterArray(rootObject.Value.EnumerateArray().Select(element =>
-        {
-            var filterObject = element.EnumerateObject().First();
-            var filterKv = filterObject.Value.EnumerateObject().First();
-            return new FilterObject(filterObject.Name, new FilterKv(filterKv.Name, filterKv.Value), null);
-        }));
+        return new FilterArray(new Lazy<FilterObject[]>(() =>
+            [.. rootObject.Value.EnumerateArray().Select(element =>
+            {
+                var filterObject = element.EnumerateObject().First();
+                var filterKv = filterObject.Value.EnumerateObject().First();
+
+                var filterValue = CreateFilterValueWithTypedArray(filterKv.Value, filterObject.Name, filterKv.Name, filterFactory);
+                return new FilterObject(filterObject.Name, new FilterKv(filterKv.Name, filterValue), null);
+            })]));
     }
 
-    private static FilterKv ParseFilterKv(JsonProperty rootObject)
+    private static FilterKv ParseFilterKv<T>(JsonProperty rootObject, FilterFactory<T> filterFactory)
     {
         var filterKv = rootObject.Value.EnumerateObject().First();
-        return new FilterKv(filterKv.Name, filterKv.Value);
+
+        var filterValue = CreateFilterValueWithTypedArray(filterKv.Value, rootObject.Name, filterKv.Name, filterFactory);
+        return new FilterKv(filterKv.Name, filterValue);
+    }
+
+    private static FilterValueKind GetTargetFilterValueKind<T>(JsonElement element, string sceneFilterName, string basicFilterName, FilterFactory<T> filterFactory)
+    {
+        if (element.ValueKind == JsonValueKind.Array)
+        {
+            return FilterValueKind.Array;
+        }
+
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            return FilterValueKind.Object;
+        }
+
+        if (element.ValueKind == JsonValueKind.Null)
+        {
+            return FilterValueKind.Null;
+        }
+
+        // For primitive types, try to use the scene filter's basic type for better type accuracy
+        var (sceneFilter, getResult) = filterFactory.GetSceneFilter(sceneFilterName);
+        if (getResult is null)
+        {
+            var basicType = sceneFilter.GetBasicType();
+            return FilterValue.BasicTypeToValueKind(basicType);
+        }
+
+        throw new FilterException(FilterStatusCode.Invalid, $"无法获取场景过滤器 {sceneFilterName} 的基本类型: {getResult.Message}", sceneFilterName);
+    }
+
+    private static FilterValue CreateFilterValueWithTypedArray<T>(JsonElement element, string sceneFilterName, string basicFilterName, FilterFactory<T> filterFactory)
+    {
+        if (element.ValueKind == JsonValueKind.Array)
+        {
+            // Get the element type from the scene filter
+            var (sceneFilter, getResult) = filterFactory.GetSceneFilter(sceneFilterName);
+            if (getResult is not null)
+            {
+                throw new FilterException(FilterStatusCode.Invalid, $"无法获取场景过滤器 {sceneFilterName} 的基本类型: {getResult.Message}", sceneFilterName);
+            }
+
+            var elementBasicType = sceneFilter.GetBasicType();
+            var elementTargetKind = FilterValue.BasicTypeToValueKind(elementBasicType);
+
+            // Convert each array element with the correct type
+            var typedElements = element.EnumerateArray()
+                .Select(arrayElement => FilterValue.FromJsonElement(arrayElement, elementTargetKind))
+                .ToArray();
+
+            return FilterValue.FromArray(typedElements);
+        }
+
+        // For non-array elements, use the regular method
+        var targetKind = GetTargetFilterValueKind(element, sceneFilterName, basicFilterName, filterFactory);
+        return FilterValue.FromJsonElement(element, targetKind);
     }
 }

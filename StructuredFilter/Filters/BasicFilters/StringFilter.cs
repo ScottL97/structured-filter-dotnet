@@ -55,17 +55,17 @@ internal class StringRegexFilter : Filter<string>, IStringFilter
         return element.AssertIsValidRegex(this);
     }
 
-    public async ValueTask<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<string> matchTargetGetter)
+    public async ValueTask<FilterException?> LazyMatchAsync(FilterValue filterValue, LazyObjectGetter<string> matchTargetGetter)
     {
         try
         {
             var matchTarget = await matchTargetGetter.GetAsync();
-            if (Regex.IsMatch(matchTarget, element.GetString()!, RegexOptions.None))
+            if (Regex.IsMatch(matchTarget, filterValue.GetString()!, RegexOptions.None))
             {
                 return null;
             }
 
-            return this.CreateNotMatchException(matchTarget, element.ToString());
+            return this.CreateNotMatchException(matchTarget, filterValue.ToString());
         }
         catch (LazyObjectGetException)
         {
@@ -73,13 +73,13 @@ internal class StringRegexFilter : Filter<string>, IStringFilter
         }
     }
 
-    public FilterException? Match(JsonElement element, string matchTarget)
+    public FilterException? Match(FilterValue filterValue, string matchTarget)
     {
-        if (Regex.IsMatch(matchTarget, element.GetString()!, RegexOptions.None))
+        if (Regex.IsMatch(matchTarget, filterValue.GetString()!, RegexOptions.None))
         {
             return null;
         }
 
-        return this.CreateNotMatchException(matchTarget, element.ToString());
+        return this.CreateNotMatchException(matchTarget, filterValue.ToString());
     }
 }

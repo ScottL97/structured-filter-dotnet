@@ -145,4 +145,16 @@ public static class Matcher
 
         throw new FilterException(FilterStatusCode.Invalid, $"unsupported filter basic type {typeof(T)}", filter.GetKey());
     }
+
+    public static bool MatchIn<T>(this JsonElement arrayElement, IFilter<T> filter, T marchTarget)
+    {
+        foreach (var element in arrayElement.EnumerateArray())
+        {
+            if (element.MatchEq(filter, marchTarget))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }

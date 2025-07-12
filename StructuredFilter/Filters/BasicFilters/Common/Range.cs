@@ -15,17 +15,17 @@ internal class RangeFilter<T>: Filter<T>, IBasicFilter<T>
         return element.AssertIsValidRange(this);
     }
 
-    public async ValueTask<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
+    public async ValueTask<FilterException?> LazyMatchAsync(FilterValue filterValue, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {
             var matchTarget = await matchTargetGetter.GetAsync();
-            var (rightCompareResult, checkResult1) = element[1].CompareTo(this, matchTarget);
+            var (rightCompareResult, checkResult1) = filterValue[1].CompareTo(this, matchTarget);
             if (checkResult1 is not null)
             {
                 return checkResult1;
             }
-            var (leftCompareResult, checkResult2) = element[0].CompareTo(this, matchTarget);
+            var (leftCompareResult, checkResult2) = filterValue[0].CompareTo(this, matchTarget);
             if (checkResult2 is not null)
             {
                 return checkResult2;
@@ -36,7 +36,7 @@ internal class RangeFilter<T>: Filter<T>, IBasicFilter<T>
                 return null;
             }
 
-            return this.CreateNotMatchException(matchTarget, element.ToString());
+            return this.CreateNotMatchException(matchTarget, filterValue.ToString());
         }
         catch (LazyObjectGetException)
         {
@@ -44,14 +44,14 @@ internal class RangeFilter<T>: Filter<T>, IBasicFilter<T>
         }
     }
 
-    public FilterException? Match(JsonElement element, T matchTarget)
+    public FilterException? Match(FilterValue filterValue, T matchTarget)
     {
-        var (rightCompareResult, checkResult1) = element[1].CompareTo(this, matchTarget);
+        var (rightCompareResult, checkResult1) = filterValue[1].CompareTo(this, matchTarget);
         if (checkResult1 is not null)
         {
             return checkResult1;
         }
-        var (leftCompareResult, checkResult2) = element[0].CompareTo(this, matchTarget);
+        var (leftCompareResult, checkResult2) = filterValue[0].CompareTo(this, matchTarget);
         if (checkResult2 is not null)
         {
             return checkResult2;
@@ -62,6 +62,6 @@ internal class RangeFilter<T>: Filter<T>, IBasicFilter<T>
             return null;
         }
 
-        return this.CreateNotMatchException(matchTarget, element.ToString());
+        return this.CreateNotMatchException(matchTarget, filterValue.ToString());
     }
 }

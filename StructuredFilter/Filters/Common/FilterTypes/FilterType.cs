@@ -116,19 +116,6 @@ public static class FilterTypeChecker
         };
     }
 
-    public static (int, FilterException?) CompareTo<T>(this JsonElement element, IFilter<T> filter, T matchTarget)
-    {
-        return typeof(T) switch
-        {
-            { } stringType when stringType == typeof(string) => (element.GetString()!.CompareTo(matchTarget), null),
-            { } doubleType when doubleType == typeof(double) => (element.GetDouble().CompareTo(matchTarget), null),
-            { } longType when longType == typeof(long) => (element.GetInt64().CompareTo(matchTarget), null),
-            { } versionType when versionType == typeof(Version) => (Version.Parse(element.GetString()!).CompareTo(matchTarget), null),
-            _ => (0, new FilterException(FilterStatusCode.Invalid,
-                $"unsupported filter basic type {typeof(T)} for compare", filter.GetKey()))
-        };
-    }
-
     public static FilterException? AssertIsValidFilterObjectArray<T>(this JsonElement element, IFilter<T> filter, JsonPropertyChecker jsonPropertyChecker)
     {
         if (element.ValueKind != JsonValueKind.Array)

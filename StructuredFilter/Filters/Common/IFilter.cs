@@ -14,9 +14,9 @@ public interface IFilter<T>
 
 public interface IBasicFilter<T> : IFilter<T>
 {
-    ValueTask<FilterException?> LazyMatchAsync(JsonElement jsonElement, LazyObjectGetter<T> matchTargetGetter);
+    ValueTask<FilterException?> LazyMatchAsync(FilterValue filterValue, LazyObjectGetter<T> matchTargetGetter);
 
-    FilterException? Match(JsonElement jsonElement, T matchTarget);
+    FilterException? Match(FilterValue filterValue, T matchTarget);
 }
 
 public interface ISceneFilter<T> : IFilter<T>

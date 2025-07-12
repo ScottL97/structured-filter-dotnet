@@ -17,24 +17,19 @@ public enum FilterStatusCode
 public class FilterException: Exception
 {
     public static readonly FilterException Ok = new (FilterStatusCode.Ok, string.Empty);
-    public Exception? InnerException { get; set; }
     public FilterStatusCode StatusCode { get; set; }
-    public string Message { get; set; }
 
     public Tree<string> FailedKeyPath { get; set; }
 
-    public FilterException(Exception? innerException, FilterStatusCode statusCode, string message, string? failedKey=null)
+    public FilterException(Exception? innerException, FilterStatusCode statusCode, string message, string? failedKey=null) : base(message, innerException)
     {
-        InnerException = innerException;
         StatusCode = statusCode;
-        Message = message;
         FailedKeyPath = new Tree<string>(failedKey);
     }
 
-    public FilterException(FilterStatusCode statusCode, string message, string? failedKey=null)
+    public FilterException(FilterStatusCode statusCode, string message, string? failedKey=null) : base(message)
     {
         StatusCode = statusCode;
-        Message = message;
         FailedKeyPath = new Tree<string>(failedKey);
     }
 

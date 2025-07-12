@@ -15,17 +15,17 @@ internal class GtFilter<T>: Filter<T>, IBasicFilter<T>
         return element.AssertIsRightElementType(this);
     }
 
-    public async ValueTask<FilterException?> LazyMatchAsync(JsonElement element, LazyObjectGetter<T> matchTargetGetter)
+    public async ValueTask<FilterException?> LazyMatchAsync(FilterValue filterValue, LazyObjectGetter<T> matchTargetGetter)
     {
         try
         {
             var matchTarget = await matchTargetGetter.GetAsync();
-            if (element.MatchGt(this, matchTarget))
+            if (filterValue.MatchGt(this, matchTarget))
             {
                 return null;
             }
 
-            return this.CreateNotMatchException(matchTarget, element.ToString());
+            return this.CreateNotMatchException(matchTarget, filterValue.ToString());
         }
         catch (LazyObjectGetException)
         {
@@ -33,13 +33,13 @@ internal class GtFilter<T>: Filter<T>, IBasicFilter<T>
         }
     }
 
-    public FilterException? Match(JsonElement element, T matchTarget)
+    public FilterException? Match(FilterValue filterValue, T matchTarget)
     {
-        if (element.MatchGt(this, matchTarget))
+        if (filterValue.MatchGt(this, matchTarget))
         {
             return null;
         }
 
-        return this.CreateNotMatchException(matchTarget, element.ToString());
+        return this.CreateNotMatchException(matchTarget, filterValue.ToString());
     }
 }

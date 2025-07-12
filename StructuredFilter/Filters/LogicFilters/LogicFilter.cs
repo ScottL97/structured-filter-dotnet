@@ -59,7 +59,7 @@ public class AndFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>,
 
     public async ValueTask<FilterException?> LazyMatchAsync(FilterArray filterArray, LazyObjectGetter<T> matchTargetGetter)
     {
-        foreach (var filterObject in filterArray.FilterObjects)
+        foreach (var filterObject in filterArray.FilterObjects.Value)
         {
             // 只要有一个filter不匹配，就抛异常
             var (filter, getResult) = sceneFilterFactory.Get(filterObject.Key);
@@ -79,7 +79,7 @@ public class AndFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>,
 
     public async ValueTask<FilterException?> MatchAsync(FilterArray filterArray, T matchTarget)
     {
-        foreach (var filterObject in filterArray.FilterObjects)
+        foreach (var filterObject in filterArray.FilterObjects.Value)
         {
             // 只要有一个filter不匹配，就抛异常
             var (filter, getResult) = sceneFilterFactory.Get(filterObject.Key);
@@ -115,7 +115,7 @@ public class OrFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>, 
     public async ValueTask<FilterException?> LazyMatchAsync(FilterArray filterArray, LazyObjectGetter<T> matchTargetGetter)
     {
         var failedKeyPath = new List<Tree<string>>();
-        foreach (var filterObject in filterArray.FilterObjects)
+        foreach (var filterObject in filterArray.FilterObjects.Value)
         {
             var (filter, getResult) = sceneFilterFactory.Get(filterObject.Key);
             if (getResult is not null)
@@ -139,7 +139,7 @@ public class OrFilter<T>(SceneFilterFactory<T> sceneFilterFactory) : Filter<T>, 
     public async ValueTask<FilterException?> MatchAsync(FilterArray filterArray, T matchTarget)
     {
         var failedKeyPath = new List<Tree<string>>();
-        foreach (var filterObject in filterArray.FilterObjects)
+        foreach (var filterObject in filterArray.FilterObjects.Value)
         {
             var (filter, getResult) = sceneFilterFactory.Get(filterObject.Key);
             if (getResult is not null)
